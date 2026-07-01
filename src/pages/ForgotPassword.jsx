@@ -9,12 +9,17 @@ const ForgotPassword = () => {
   const [error, setError] = useState('');
   const [sent, setSent] = useState(false);
 
+  const [devResetUrl, setDevResetUrl] = useState('');
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
     try {
-      await api.post('/auth/forgot-password', { email });
+      const res = await api.post('/auth/forgot-password', { email });
+      if (res.data && res.data.resetUrl) {
+        setDevResetUrl(res.data.resetUrl);
+      }
       setSent(true);
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to send reset email. Please try again.');
@@ -69,6 +74,14 @@ const ForgotPassword = () => {
               We sent a password reset link to <strong style={{ color: 'var(--primary)' }}>{email}</strong>.
               The link expires in 10 minutes.
             </p>
+            {devResetUrl && (
+              <div style={{ marginTop: '20px', padding: '16px', background: 'rgba(99, 102, 241, 0.1)', borderRadius: '8px', border: '1px dashed var(--primary)', marginBottom: '24px' }}>
+                <p style={{ fontSize: '0.85rem', marginBottom: '12px', fontWeight: 'bold', color: 'var(--primary)' }}>[Dev Mode] Test Email Link:</p>
+                <Link to={`/reset-password/${devResetUrl.substring(devResetUrl.lastIndexOf('/') + 1)}`} className="btn btn-primary" style={{ display: 'inline-block', fontSize: '0.85rem', padding: '8px 16px', textDecoration: 'none' }}>
+                  Reset Password Now
+                </Link>
+              </div>
+            )}
             <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '24px' }}>
               Didn't receive it? Check your spam folder or{' '}
               <button

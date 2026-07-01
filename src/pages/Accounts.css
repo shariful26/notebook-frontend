@@ -21,7 +21,64 @@
 
 .grand-total-card h1 {
   font-size: 3rem;
-  margin: 0;
+  margin: 0 0 12px;
+}
+
+.grand-total-breakdown {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.grand-total-breakdown span {
+  font-size: 0.9rem;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-weight: 600;
+}
+
+.gt-plus {
+  background: rgba(34, 197, 94, 0.18);
+  color: #4ade80;
+}
+
+.gt-minus {
+  background: rgba(239, 68, 68, 0.18);
+  color: #f87171;
+}
+
+.gt-base {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.75);
+}
+
+/* Account card balance breakdown */
+.acc-balance-breakdown {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.acc-balance-breakdown .base-amount {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.bd-plus {
+  font-size: 0.82rem;
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.bd-minus {
+  font-size: 0.82rem;
+  color: #f87171;
+  font-weight: 600;
 }
 
 .empty-state {
@@ -337,6 +394,14 @@
 .type-cell { min-width: 100px; }
 .amount-cell { font-weight: 600; white-space: nowrap; font-size: 1.05rem; }
 .note-cell { color: var(--text-muted); max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.note-cell.clickable {
+  cursor: pointer;
+  transition: var(--transition);
+}
+.note-cell.clickable:hover {
+  color: #fff;
+  text-decoration: underline;
+}
 .balance-cell { font-weight: 700; white-space: nowrap; text-align: right; font-size: 1.05rem; }
 
 .badge {
@@ -370,4 +435,79 @@
     overflow-x: auto;
   }
 }
+
+/* Note Viewer Modal */
+.note-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(15, 23, 42, 0.8);
+  backdrop-filter: blur(8px);
+  z-index: 100000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.note-modal-content {
+  background: var(--bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.5), 0 8px 10px -6px rgb(0 0 0 / 0.5);
+  display: flex;
+  flex-direction: column;
+}
+
+.note-modal-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.note-modal-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #fff;
+}
+
+.note-modal-body {
+  padding: 24px 20px;
+  max-height: 300px;
+  overflow-y: auto;
+  font-size: 1.05rem;
+  line-height: 1.6;
+  color: var(--text-main);
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+
+.note-modal-footer {
+  padding: 16px 20px;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* Spinner Animation */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.spinner {
+  border: 4px solid rgba(255, 255, 255, 0.1);
+  border-top: 4px solid var(--primary);
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  animation: spin 1s linear infinite;
+}
+
 

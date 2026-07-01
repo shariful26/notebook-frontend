@@ -12,10 +12,22 @@ export const AccountsProvider = ({ children }) => {
   const [deletedAccounts, setDeletedAccounts] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // Compute currentBalance from baseAmount + transactions (frontend side)
+  const computeBalance = (acc) => {
+    let bal = acc.baseAmount || 0;
+    (acc.transactions || []).forEach(trx => {
+      if (trx.type === 'plus') bal += trx.amount;
+      else if (trx.type === 'minus') bal -= trx.amount;
+    });
+    return bal;
+  };
+
+  const withBalance = (accs) => accs.map(a => ({ ...a, currentBalance: computeBalance(a) }));
+
   const fetchAccounts = async () => {
     try {
       const res = await api.get('/accounts');
-      setAccounts(res.data.data);
+      setAccounts(withBalance(res.data.data));
     } catch (e) { console.error(e); }
     setLoading(false);
   };
@@ -39,7 +51,8 @@ export const AccountsProvider = ({ children }) => {
 
   const addAccount = async (name, baseAmount) => {
     const res = await api.post('/accounts', { name, baseAmount });
-    setAccounts([...accounts, res.data.data]);
+    const newAcc = res.data.data;
+    setAccounts([...accounts, { ...newAcc, currentBalance: computeBalance(newAcc) }]);
   };
 
   const deleteAccount = async (id) => {
@@ -47,9 +60,10 @@ export const AccountsProvider = ({ children }) => {
     setAccounts(accounts.filter(a => a._id !== id));
   };
 
-  const addTransaction = async (accountId, type, amount, note) => {
-    const res = await api.post(`/accounts/${accountId}/transaction`, { type, amount, note });
-    setAccounts(accounts.map(a => a._id === accountId ? res.data.data : a));
+  const addTransaction = async (accountId, type, amount, note, proofImage) => {
+    const res = await api.post(`/accounts/${accountId}/transaction`, { type, amount, note, proofImage });
+    const updated = res.data.data;
+    setAccounts(accounts.map(a => a._id === accountId ? { ...updated, currentBalance: computeBalance(updated) } : a));
   };
 
   const shareAccount = async (accountId, targetUserId) => {

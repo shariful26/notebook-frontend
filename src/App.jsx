@@ -26,9 +26,10 @@ const AppRoutes = () => {
       
       <Route element={<MainLayout />}>
         <Route element={<ProtectedRoute />}>
-          <Route path="/" element={<Notes />} />
+          <Route path="/" element={<Accounts />} />
+          <Route path="/accounts" element={<Navigate to="/" replace />} />
+          <Route path="/notes" element={<Notes />} />
           <Route path="/categories" element={<Categories />} />
-          <Route path="/accounts" element={<Accounts />} />
           <Route path="/shared-accounts" element={<SharedAccounts />} />
           <Route path="/deleted-accounts" element={<DeletedAccounts />} />
         </Route>

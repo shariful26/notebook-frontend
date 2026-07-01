@@ -49,8 +49,13 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  const updateProfileImage = async (profileImage) => {
+    const res = await api.put('/auth/profile-image', { profileImage });
+    setUser(res.data.data);
+  };
+
   return (
-    <AuthContext.Provider value={{ user, token, loading, register, login, logout, isAuthenticated: !!user, setUser, setToken }}>
+    <AuthContext.Provider value={{ user, token, loading, register, login, logout, updateProfileImage, isAuthenticated: !!user, setUser, setToken }}>
       {children}
     </AuthContext.Provider>
   );
