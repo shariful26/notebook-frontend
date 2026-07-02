@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { useAccounts } from '../context/AccountsContext';
 import { useAuth } from '../context/AuthContext';
 import api from '../api';
-import { Plus, Minus, Share2, FolderOpen, Trash2, History, TrendingUp, TrendingDown, X, ArrowUpCircle, ArrowDownCircle, FileDown, Image, Mail } from 'lucide-react';
+import { Plus, Minus, Share2, FolderOpen, Trash2, History, TrendingUp, TrendingDown, X, ArrowUpCircle, ArrowDownCircle, FileDown, Image, Mail, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { downloadPDFFromHTML, emailPDFFromHTML } from '../utils/pdfGenerator';
 import './Accounts.css';
@@ -52,6 +52,14 @@ const Accounts = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
+  const totalDue = personalAccounts
+    .filter(acc => acc.currentBalance > 0)
+    .reduce((sum, acc) => sum + acc.currentBalance, 0);
+
+  const totalReceivable = personalAccounts
+    .filter(acc => acc.currentBalance < 0)
+    .reduce((sum, acc) => sum + Math.abs(acc.currentBalance), 0);
+
   const isAdmin = user && user.role === 'admin';
 
   // Dialog states
@@ -60,6 +68,11 @@ const Accounts = () => {
   const [accBase, setAccBase] = useState('0');
   const [accBaseType, setAccBaseType] = useState('plus');
   const [adminAccounts, setAdminAccounts] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredAccounts = personalAccounts.filter(acc =>
+    acc.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   // Transaction states
   const [showTrx, setShowTrx] = useState(false);
@@ -283,15 +296,39 @@ const Accounts = () => {
         </div>
 
         <div className="grand-total-card">
-          <p>Grand Total (সর্বমোট বকেয়া/ঋণ)</p>
-          <h1>{formatCurrency(Number(personalTotal))}</h1>
+          <div className="grand-total-split">
+            <div className="grand-total-col due">
+              <p>Grand Total Due (সর্বমোট বকেয়া/ঋণ)</p>
+              <h1>{formatCurrency(totalDue)}</h1>
+            </div>
+            <div className="grand-total-divider"></div>
+            <div className="grand-total-col receivable">
+              <p>Grand Total Receivable (আমি পাবো/প্লাস)</p>
+              <h1>{formatCurrency(totalReceivable)}</h1>
+            </div>
+          </div>
+        </div>
+
+        <div className="search-bar-container">
+          <Search size={20} className="search-icon" />
+          <input
+            type="text"
+            className="search-input"
+            placeholder="হিসাবের নাম দিয়ে খুঁজুন... (Search account name...)"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
         </div>
 
         <div className="accounts-list">
-          {personalAccounts.length === 0 ? (
-            <div className="empty-state">No personal accounts found. Add one!</div>
+          {filteredAccounts.length === 0 ? (
+            <div className="empty-state">
+              {personalAccounts.length === 0 
+                ? "No personal accounts found. Add one!" 
+                : "কোনো হিসাব খুঁজে পাওয়া যায়নি! (No matching accounts found)"}
+            </div>
           ) : (
-            personalAccounts.map(acc => (
+            filteredAccounts.map(acc => (
               <div key={acc._id} className="glass-card account-card">
                 <div className="account-info">
                   <h3>{acc.name}</h3>
