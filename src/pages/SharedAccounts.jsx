@@ -46,15 +46,17 @@ const SharedAccounts = () => {
     const rows = [];
     let running = Number(acc.baseAmount) || 0;
 
-    // Starting row
-    rows.push({
-      id: 'base',
-      date: acc.createdAt,
-      type: acc.baseAmount >= 0 ? 'base' : 'base_minus',
-      amount: Math.abs(Number(acc.baseAmount)) || 0,
-      note: acc.baseAmount >= 0 ? 'প্রারম্ভিক বকেয়া (Base)' : 'প্রারম্ভিক পরিশোধ (Base)',
-      balance: running,
-    });
+    // Starting row (only for non-zero baseAmount to support legacy accounts)
+    if (running !== 0) {
+      rows.push({
+        id: 'base',
+        date: acc.createdAt,
+        type: acc.baseAmount >= 0 ? 'plus' : 'minus',
+        amount: Math.abs(Number(acc.baseAmount)) || 0,
+        note: acc.baseNote || '—',
+        balance: running,
+      });
+    }
 
     // Transactions chronologically
     const sorted = [...(acc.transactions || [])].sort(
@@ -168,8 +170,9 @@ const SharedAccounts = () => {
           {/* History Modal */}
           {showHistory && historyAcc && (() => {
             const rows = getRunningHistory(historyAcc);
-            const totalIn = historyAcc.transactions.filter(t => t.type === 'plus').reduce((s, t) => s + t.amount, 0);
-            const totalOut = historyAcc.transactions.filter(t => t.type === 'minus').reduce((s, t) => s + t.amount, 0);
+            const baseAmt = Number(historyAcc.baseAmount) || 0;
+            const totalIn = historyAcc.transactions.filter(t => t.type === 'plus').reduce((s, t) => s + t.amount, 0) + (baseAmt > 0 ? baseAmt : 0);
+            const totalOut = historyAcc.transactions.filter(t => t.type === 'minus').reduce((s, t) => s + t.amount, 0) + (baseAmt < 0 ? Math.abs(baseAmt) : 0);
             return (
               <div className="full-page-overlay animate-slide-up">
                 <div className="full-page-container">
@@ -366,8 +369,9 @@ const SharedAccounts = () => {
 
                 {(() => {
                   const rows = getRunningHistory(historyAcc);
-                  const totalIn = historyAcc.transactions.filter(t => t.type === 'plus').reduce((s, t) => s + t.amount, 0);
-                  const totalOut = historyAcc.transactions.filter(t => t.type === 'minus').reduce((s, t) => s + t.amount, 0);
+                  const baseAmt = Number(historyAcc.baseAmount) || 0;
+                  const totalIn = historyAcc.transactions.filter(t => t.type === 'plus').reduce((s, t) => s + t.amount, 0) + (baseAmt > 0 ? baseAmt : 0);
+                  const totalOut = historyAcc.transactions.filter(t => t.type === 'minus').reduce((s, t) => s + t.amount, 0) + (baseAmt < 0 ? Math.abs(baseAmt) : 0);
                   const currentBal = historyAcc.currentBalance;
                   return (
                     <>

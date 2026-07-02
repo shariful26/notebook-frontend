@@ -48,7 +48,7 @@ const compressImage = (file, maxWidth = 800, maxHeight = 800, quality = 0.7) => 
 };
 
 const Accounts = () => {
-  const { personalAccounts, personalTotal, addAccount, addTransaction, shareAccount, shareAllAccounts, deleteAccount } = useAccounts();
+  const { personalAccounts, personalTotal, addAccount, addTransaction, deleteTransaction, shareAccount, shareAllAccounts, deleteAccount } = useAccounts();
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -67,6 +67,7 @@ const Accounts = () => {
   const [accName, setAccName] = useState('');
   const [accBase, setAccBase] = useState('0');
   const [accBaseType, setAccBaseType] = useState('plus');
+  const [accBaseNote, setAccBaseNote] = useState('');
   const [adminAccounts, setAdminAccounts] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -124,11 +125,12 @@ const Accounts = () => {
   const handleAddAccount = async (e) => {
     e.preventDefault();
     const baseVal = accBaseType === 'minus' ? -Math.abs(Number(accBase)) : Math.abs(Number(accBase));
-    await addAccount(accName, baseVal);
+    await addAccount(accName, baseVal, accBaseNote);
     setShowAddAcc(false);
     setAccName('');
     setAccBase('0');
     setAccBaseType('plus');
+    setAccBaseNote('');
   };
 
   const handleAddTransaction = async (e) => {
@@ -139,6 +141,18 @@ const Accounts = () => {
     setTrxNote('');
     setTrxImage('');
     setImagePreview('');
+  };
+
+  const handleDeleteTransaction = async (accountId, transactionId) => {
+    if (window.confirm('আপনি কি এই লেনদেনটি মুছে ফেলতে চান?')) {
+      try {
+        const updatedAcc = await deleteTransaction(accountId, transactionId);
+        setHistoryAcc(updatedAcc);
+      } catch (e) {
+        console.error(e);
+        alert('লেনদেনটি মুছতে ব্যর্থ হয়েছে।');
+      }
+    }
   };
 
   const handleImageChange = async (e) => {
@@ -234,15 +248,17 @@ const Accounts = () => {
     const rows = [];
     let running = Number(acc.baseAmount) || 0;
 
-    // Starting row
-    rows.push({
-      id: 'base',
-      date: acc.createdAt,
-      type: acc.baseAmount >= 0 ? 'base' : 'base_minus',
-      amount: Math.abs(Number(acc.baseAmount)) || 0,
-      note: acc.baseAmount >= 0 ? 'প্রারম্ভিক ব্যালেন্স (Base)' : 'প্রারম্ভিক বকেয়া (Base)',
-      balance: running,
-    });
+    // Starting row (only for non-zero baseAmount to support legacy accounts)
+    if (running !== 0) {
+      rows.push({
+        id: 'base',
+        date: acc.createdAt,
+        type: acc.baseAmount >= 0 ? 'plus' : 'minus',
+        amount: Math.abs(Number(acc.baseAmount)) || 0,
+        note: acc.baseNote || '—',
+        balance: running,
+      });
+    }
 
     // Transactions chronologically
     const sorted = [...(acc.transactions || [])].sort(
@@ -377,8 +393,9 @@ const Accounts = () => {
         {/* History Modal */}
         {showHistory && historyAcc && (() => {
           const rows = getRunningHistory(historyAcc);
-          const totalIn = historyAcc.transactions.filter(t => t.type === 'plus').reduce((s, t) => s + t.amount, 0);
-          const totalOut = historyAcc.transactions.filter(t => t.type === 'minus').reduce((s, t) => s + t.amount, 0);
+          const baseAmt = Number(historyAcc.baseAmount) || 0;
+          const totalIn = historyAcc.transactions.filter(t => t.type === 'plus').reduce((s, t) => s + t.amount, 0) + (baseAmt > 0 ? baseAmt : 0);
+          const totalOut = historyAcc.transactions.filter(t => t.type === 'minus').reduce((s, t) => s + t.amount, 0) + (baseAmt < 0 ? Math.abs(baseAmt) : 0);
           return (
             <div className="full-page-overlay animate-slide-up">
               <div className="full-page-container">
@@ -438,6 +455,7 @@ const Accounts = () => {
                           <th>পরিমাণ</th>
                           <th>রেফারেন্স / নোট</th>
                           <th>ব্যালেন্স</th>
+                          <th style={{ textAlign: 'center' }}>অ্যাকশন</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -488,6 +506,31 @@ const Accounts = () => {
                             <td className={`balance-cell ${row.balance > 0 ? 'negative' : row.balance < 0 ? 'positive' : ''}`}>
                               {formatCurrency(Math.abs(row.balance))}
                             </td>
+                            <td className="action-cell" style={{ textAlign: 'center' }}>
+                              {row.id !== 'base' ? (
+                                <button
+                                  type="button"
+                                  className="icon-btn delete-trx-btn"
+                                  title="লেনদেনটি মুছুন"
+                                  onClick={() => handleDeleteTransaction(historyAcc._id, row.id)}
+                                  style={{ 
+                                    padding: '4px 8px', 
+                                    background: 'rgba(239, 68, 68, 0.15)', 
+                                    color: '#ef4444', 
+                                    borderRadius: '4px', 
+                                    border: 'none', 
+                                    cursor: 'pointer', 
+                                    display: 'inline-flex', 
+                                    alignItems: 'center', 
+                                    justifyContent: 'center' 
+                                  }}
+                                >
+                                  <Trash2 size={13} />
+                                </button>
+                              ) : (
+                                <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>—</span>
+                              )}
+                            </td>
                           </tr>
                         ))}
                       </tbody>
@@ -530,6 +573,10 @@ const Accounts = () => {
                       <option value="plus">বকেয়া / ঋণ (+)</option>
                       <option value="minus">পরিশোধ / অগ্রিম (-)</option>
                     </select>
+                  </div>
+                  <div className="input-group">
+                    <label className="input-label">Note / বিবরণ (Optional)</label>
+                    <input className="input-field" value={accBaseNote} onChange={e => setAccBaseNote(e.target.value)} placeholder="উদা: প্রারম্ভিক হিসাব, ক্যাশ অন হ্যান্ড ইত্যাদি" />
                   </div>
                 </div>
                 <div className="fp-footer">
@@ -704,8 +751,9 @@ const Accounts = () => {
 
               {(() => {
                 const rows = getRunningHistory(historyAcc);
-                const totalIn = historyAcc.transactions.filter(t => t.type === 'plus').reduce((s, t) => s + t.amount, 0);
-                const totalOut = historyAcc.transactions.filter(t => t.type === 'minus').reduce((s, t) => s + t.amount, 0);
+                const baseAmt = Number(historyAcc.baseAmount) || 0;
+                const totalIn = historyAcc.transactions.filter(t => t.type === 'plus').reduce((s, t) => s + t.amount, 0) + (baseAmt > 0 ? baseAmt : 0);
+                const totalOut = historyAcc.transactions.filter(t => t.type === 'minus').reduce((s, t) => s + t.amount, 0) + (baseAmt < 0 ? Math.abs(baseAmt) : 0);
                 const currentBal = historyAcc.currentBalance;
                 return (
                   <>
