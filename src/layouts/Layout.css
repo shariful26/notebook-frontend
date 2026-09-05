@@ -311,11 +311,9 @@
   }
 
   .main-glass-container {
-    padding: 14px;
-    padding-top: 72px; /* Space for mobile header */
-    padding-bottom: 84px; /* Space for bottom nav */
+    padding: 18px 14px;
     border-radius: var(--radius-lg);
-    min-height: calc(100vh - 16px);
+    min-height: calc(100vh - 160px);
   }
 
   .d-md-none {

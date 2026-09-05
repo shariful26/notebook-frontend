@@ -286,9 +286,9 @@ const Accounts = () => {
   return (
     <>
       <div className="accounts-page animate-fade-in">
-        <div className="flex-between" style={{ marginBottom: '24px' }}>
+        <div className="flex-between" style={{ marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
           <h2>Accounts / হিসাব</h2>
-          <div style={{ display: 'flex', gap: '12px' }}>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
             {isAdmin && (
               <button 
                 className="btn btn-primary" 
@@ -296,17 +296,17 @@ const Accounts = () => {
                 onClick={handleDownloadAllUsersPDF}
                 style={{ background: 'linear-gradient(135deg, #10b981, #059669)', gap: '6px' }}
               >
-                <FileDown size={20} /> All Users PDF
+                <FileDown size={18} /> All Users PDF
               </button>
             )}
             <button className="btn btn-ghost" title="Recycle Bin" onClick={() => navigate('/deleted-accounts')} style={{ color: 'var(--danger)' }}>
-              <Trash2 size={20} />
+              <Trash2 size={18} />
             </button>
             <button className="btn btn-ghost" title="Shared With Me" onClick={() => navigate('/shared-accounts')}>
-              <FolderOpen size={20} />
+              <FolderOpen size={18} />
             </button>
             <button className="btn btn-primary" title="Share All" onClick={() => { setIsShareAll(true); setShowShare(true); }}>
-              <Share2 size={20} />
+              <Share2 size={18} />
             </button>
           </div>
         </div>

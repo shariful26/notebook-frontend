@@ -208,8 +208,9 @@ p {
 @media (max-width: 768px) {
   .main-content {
     margin-left: 0;
-    padding: 16px;
-    padding-bottom: 80px; /* For bottom nav */
+    padding: 12px;
+    padding-top: 76px; /* Position page content cleanly below top navbar */
+    padding-bottom: 84px; /* For bottom nav */
   }
 }
 
