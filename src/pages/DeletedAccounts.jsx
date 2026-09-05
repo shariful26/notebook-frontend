@@ -14,7 +14,7 @@ const DeletedAccounts = () => {
     // eslint-disable-next-line
   }, []);
 
-  const formatCurrency = (amount) => `৳ ${Number(amount).toLocaleString()}`;
+  const formatCurrency = (amount) => `৳\u00A0${Number(amount).toLocaleString()}`;
 
   return (
     <div className="accounts-page animate-fade-in">

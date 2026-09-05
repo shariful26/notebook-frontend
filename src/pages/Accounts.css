@@ -473,9 +473,9 @@
 .history-row.plus:hover { background: rgba(34, 197, 94, 0.05); }
 .history-row.minus:hover { background: rgba(239, 68, 68, 0.05); }
 
-.date-cell { color: var(--text-muted); white-space: nowrap; font-size: 0.85rem; }
-.type-cell { min-width: 100px; }
-.amount-cell { font-weight: 600; white-space: nowrap; font-size: 1.05rem; }
+.date-cell { color: var(--text-muted); white-space: nowrap !important; font-size: 0.85rem; }
+.type-cell { min-width: 100px; white-space: nowrap !important; }
+.amount-cell { font-weight: 600; white-space: nowrap !important; font-size: 1.05rem; }
 .note-cell { color: var(--text-muted); max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .note-cell.clickable {
   cursor: pointer;
@@ -485,7 +485,9 @@
   color: #fff;
   text-decoration: underline;
 }
-.balance-cell { font-weight: 700; white-space: nowrap; text-align: right; font-size: 1.05rem; }
+.balance-cell { font-weight: 700; white-space: nowrap !important; text-align: right; font-size: 1.05rem; }
+.fp-summary-card .value { white-space: nowrap !important; }
+.current-balance { white-space: nowrap !important; }
 
 .badge {
   display: inline-flex;

@@ -112,7 +112,7 @@ const Accounts = () => {
     }
   }, [showShare]);
 
-  const formatCurrency = (amount) => `৳ ${Number(amount).toLocaleString()}`;
+  const formatCurrency = (amount) => `৳\u00A0${Number(amount).toLocaleString()}`;
 
   const formatDate = (dateStr) => {
     const d = new Date(dateStr);
