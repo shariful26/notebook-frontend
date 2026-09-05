@@ -400,28 +400,28 @@ const Accounts = () => {
             <div className="full-page-overlay animate-slide-up">
               <div className="full-page-container">
                 <div className="fp-header">
-                  <div>
-                    <h3>{historyAcc.name}</h3>
-                    <p>লেনদেনের ইতিহাস ({rows.length - 1} টি লেনদেন)</p>
+                  <div className="fp-header-main">
+                    <div className="fp-header-title">
+                      <h3>{historyAcc.name}</h3>
+                      <p>লেনদেনের ইতিহাস ({rows.length - 1} টি লেনদেন)</p>
+                    </div>
+                    <button className="fp-close-btn" onClick={() => setShowHistory(false)} aria-label="Close modal">
+                      <X size={20} />
+                    </button>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div className="fp-header-actions">
                     <button 
-                      className="btn btn-primary" 
+                      className="btn btn-primary fp-action-btn" 
                       onClick={() => handleDownloadSinglePDF(historyAcc.name)}
-                      style={{ padding: '8px 16px', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '6px', height: '40px' }}
                     >
-                      <FileDown size={16} /> PDF ডাউনলোড
+                      <FileDown size={16} /> <span>PDF ডাউনলোড</span>
                     </button>
                     <button 
-                      className="btn btn-ghost" 
+                      className="btn btn-ghost fp-action-btn" 
                       onClick={() => openEmailModal(historyAcc.name)}
                       disabled={emailLoading}
-                      style={{ padding: '8px 16px', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '6px', height: '40px', background: 'rgba(99, 102, 241, 0.1)', color: 'var(--primary)', border: '1px solid var(--primary)' }}
                     >
-                      <Mail size={16} /> {emailLoading ? "পাঠানো হচ্ছে..." : "ইমেইলে পাঠান"}
-                    </button>
-                    <button className="fp-close-btn" onClick={() => setShowHistory(false)} style={{ width: '40px', height: '40px' }}>
-                      <X size={20} />
+                      <Mail size={16} /> <span>{emailLoading ? "পাঠানো হচ্ছে..." : "ইমেইলে পাঠান"}</span>
                     </button>
                   </div>
                 </div>
