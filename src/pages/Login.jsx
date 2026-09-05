@@ -18,7 +18,13 @@ const Login = () => {
       await login(email, password);
       navigate('/');
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to login');
+      if (err.response?.status === 402) {
+        setError('Backend service disabled (402 Payment Required). Please check backend deployment.');
+      } else if (!err.response) {
+        setError('Network error: Unable to connect to the server.');
+      } else {
+        setError(err.response?.data?.error || 'Failed to login');
+      }
     }
   };
 
