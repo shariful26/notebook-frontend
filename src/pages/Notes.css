@@ -128,3 +128,40 @@
   border-color: white;
   box-shadow: 0 0 0 2px var(--bg-color);
 }
+
+/* Mobile Responsive Enhancements */
+@media (max-width: 640px) {
+  .notes-masonry {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .note-card {
+    padding: 16px;
+    max-height: 280px;
+  }
+
+  .editor-title {
+    font-size: 1.25rem;
+  }
+
+  .editor-content {
+    font-size: 0.95rem;
+  }
+
+  .editor-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .tool-group {
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .color-swatch {
+    width: 32px;
+    height: 32px; /* Increased for finger tap */
+  }
+}

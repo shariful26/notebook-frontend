@@ -613,5 +613,108 @@
   transform: translateY(-50%) scale(1.05);
 }
 
+/* ─── Mobile Responsiveness Enhancements ─── */
+@media (max-width: 640px) {
+  .grand-total-card {
+    padding: 20px 14px;
+    border-radius: var(--radius-lg);
+  }
+
+  .grand-total-card h1 {
+    font-size: clamp(1.8rem, 7vw, 2.5rem);
+  }
+
+  .grand-total-col p {
+    font-size: 0.85rem !important;
+  }
+
+  .grand-total-col h1 {
+    font-size: clamp(1.4rem, 5.5vw, 1.8rem) !important;
+  }
+
+  .account-card {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding: 14px 16px;
+  }
+
+  .account-info {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  .account-actions {
+    width: 100%;
+    justify-content: space-between;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .current-balance {
+    text-align: right;
+    min-width: auto;
+    font-size: 1.15rem;
+  }
+
+  .icon-btn {
+    width: 40px;
+    height: 40px; /* Enhanced touch target size */
+  }
+
+  .fab-btn {
+    bottom: 80px; /* Safe position above mobile bottom nav */
+    right: 20px;
+    width: 56px;
+    height: 56px;
+  }
+
+  .full-page-container {
+    height: 100vh;
+    height: 100dvh;
+  }
+
+  .fp-header {
+    padding: 14px 16px;
+  }
+
+  .fp-header h3 {
+    font-size: 1.2rem;
+  }
+
+  .fp-content {
+    padding: 14px 16px;
+  }
+
+  .fp-footer {
+    padding: 14px 16px;
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+  }
+
+  .fp-history-summary {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .fp-summary-card {
+    padding: 10px 8px;
+  }
+
+  .fp-summary-card .value {
+    font-size: 1.1rem;
+  }
+
+  .fp-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .history-table {
+    min-width: 540px; /* Enables clean horizontal swipe for table on mobile */
+  }
+}
+
 
 

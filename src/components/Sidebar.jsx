@@ -71,17 +71,33 @@ const Sidebar = () => {
 
   return (
     <>
-      <button 
-        className="mobile-menu-btn d-md-none" 
-        onClick={() => setIsOpen(!isOpen)}
-        style={{
-          position: 'fixed', top: '16px', left: '16px', zIndex: 1000,
-          background: 'var(--surface)', border: '1px solid var(--border-color)',
-          padding: '8px', borderRadius: '8px', color: 'white', cursor: 'pointer'
-        }}
-      >
-        {isOpen ? <X /> : <Menu />}
-      </button>
+      {/* Mobile Top Header Bar */}
+      <header className="mobile-top-bar d-md-none">
+        <button 
+          className="mobile-menu-btn" 
+          onClick={() => setIsOpen(!isOpen)}
+          aria-label="Toggle menu"
+        >
+          {isOpen ? <X size={22} /> : <Menu size={22} />}
+        </button>
+        <div className="mobile-top-brand">
+          <BookOpen color="var(--primary)" size={24} />
+          <span>Smart Note</span>
+        </div>
+        <div className="mobile-user-avatar" onClick={handleAvatarClick} title="প্রোফাইল ছবি">
+          {user?.profileImage ? (
+            <img src={user.profileImage} alt="Profile" />
+          ) : (
+            user?.name?.charAt(0).toUpperCase()
+          )}
+        </div>
+      </header>
+
+      {/* Backdrop Overlay for mobile drawer */}
+      <div 
+        className={`sidebar-overlay ${isOpen ? 'open' : ''}`} 
+        onClick={() => setIsOpen(false)} 
+      />
 
       <div className={`sidebar ${isOpen ? 'open' : ''}`}>
         <div className="sidebar-header">
@@ -131,6 +147,21 @@ const Sidebar = () => {
           </button>
         </div>
       </div>
+
+      {/* Mobile Bottom Navigation Bar */}
+      <nav className="mobile-bottom-nav d-md-none">
+        {navItems.map((item) => (
+          <NavLink 
+            key={item.path} 
+            to={item.path} 
+            className={({isActive}) => `bottom-nav-item ${isActive ? 'active' : ''}`}
+            onClick={() => setIsOpen(false)}
+          >
+            <div className="bottom-nav-icon">{item.icon}</div>
+            <span className="bottom-nav-label">{item.name.split(' / ')[0]}</span>
+          </NavLink>
+        ))}
+      </nav>
     </>
   );
 };
