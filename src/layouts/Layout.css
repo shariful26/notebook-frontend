@@ -311,9 +311,13 @@
   }
 
   .main-glass-container {
-    padding: 18px 14px;
-    border-radius: var(--radius-lg);
+    padding: 14px 10px;
+    border-radius: var(--radius-md);
     min-height: calc(100vh - 160px);
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden;
   }
 
   .d-md-none {
