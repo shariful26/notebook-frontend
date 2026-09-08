@@ -13,6 +13,7 @@ import Categories from './pages/Categories';
 import Accounts from './pages/Accounts';
 import SharedAccounts from './pages/SharedAccounts';
 import DeletedAccounts from './pages/DeletedAccounts';
+import Notifications from './pages/Notifications';
 
 const AppRoutes = () => {
   const { isAuthenticated } = useAuth();
@@ -28,6 +29,7 @@ const AppRoutes = () => {
         <Route element={<ProtectedRoute />}>
           <Route path="/" element={<Accounts />} />
           <Route path="/accounts" element={<Navigate to="/" replace />} />
+          <Route path="/notifications" element={<Notifications />} />
           <Route path="/notes" element={<Notes />} />
           <Route path="/categories" element={<Categories />} />
           <Route path="/shared-accounts" element={<SharedAccounts />} />

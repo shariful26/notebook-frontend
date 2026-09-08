@@ -9,7 +9,8 @@ import {
   LogOut, 
   Menu, 
   X,
-  BookOpen
+  BookOpen,
+  Bell
 } from 'lucide-react';
 
 const compressImage = (file, maxWidth = 120, maxHeight = 120, quality = 0.85) => {
@@ -60,6 +61,7 @@ const Sidebar = () => {
 
   const navItems = [
     { name: 'Accounts / হিসাব', path: '/', icon: <Wallet size={20} /> },
+    { name: 'Notifications / নোটিফিকেশন', path: '/notifications', icon: <Bell size={20} /> },
     { name: 'Notes / নোটসমূহ', path: '/notes', icon: <StickyNote size={20} /> },
     { name: 'Categories / ক্যাটেগরি', path: '/categories', icon: <Tags size={20} /> },
     { name: 'Shared With Me', path: '/shared-accounts', icon: <Share2 size={20} /> },

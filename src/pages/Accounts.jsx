@@ -3,9 +3,10 @@ import { createPortal } from 'react-dom';
 import { useAccounts } from '../context/AccountsContext';
 import { useAuth } from '../context/AuthContext';
 import api from '../api';
-import { Plus, Minus, Share2, FolderOpen, Trash2, History, TrendingUp, TrendingDown, X, ArrowUpCircle, ArrowDownCircle, FileDown, Image, Mail, Search } from 'lucide-react';
+import { Plus, Minus, Share2, FolderOpen, Trash2, History, TrendingUp, TrendingDown, X, ArrowUpCircle, ArrowDownCircle, FileDown, Image, Mail, Search, Bell, Edit3, Phone } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { downloadPDFFromHTML, emailPDFFromHTML } from '../utils/pdfGenerator';
+import NotificationModal from '../components/NotificationModal';
 import './Accounts.css';
 
 const compressImage = (file, maxWidth = 800, maxHeight = 800, quality = 0.7) => {
@@ -48,7 +49,7 @@ const compressImage = (file, maxWidth = 800, maxHeight = 800, quality = 0.7) => 
 };
 
 const Accounts = () => {
-  const { personalAccounts, personalTotal, addAccount, addTransaction, deleteTransaction, shareAccount, shareAllAccounts, deleteAccount } = useAccounts();
+  const { personalAccounts, personalTotal, addAccount, updateAccount, addTransaction, deleteTransaction, shareAccount, shareAllAccounts, deleteAccount } = useAccounts();
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -65,9 +66,20 @@ const Accounts = () => {
   // Dialog states
   const [showAddAcc, setShowAddAcc] = useState(false);
   const [accName, setAccName] = useState('');
+  const [accPhone, setAccPhone] = useState('');
+  const [accEmail, setAccEmail] = useState('');
   const [accBase, setAccBase] = useState('0');
   const [accBaseType, setAccBaseType] = useState('plus');
   const [accBaseNote, setAccBaseNote] = useState('');
+  
+  // Edit Account state
+  const [showEditAcc, setShowEditAcc] = useState(false);
+  const [editingAcc, setEditingAcc] = useState(null);
+
+  // Notification Modal state
+  const [showNotifModal, setShowNotifModal] = useState(false);
+  const [notifAcc, setNotifAcc] = useState(null);
+
   const [adminAccounts, setAdminAccounts] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -125,12 +137,44 @@ const Accounts = () => {
   const handleAddAccount = async (e) => {
     e.preventDefault();
     const baseVal = accBaseType === 'minus' ? -Math.abs(Number(accBase)) : Math.abs(Number(accBase));
-    await addAccount(accName, baseVal, accBaseNote);
+    await addAccount(accName, baseVal, accBaseNote, accPhone, accEmail);
     setShowAddAcc(false);
     setAccName('');
+    setAccPhone('');
+    setAccEmail('');
     setAccBase('0');
     setAccBaseType('plus');
     setAccBaseNote('');
+  };
+
+  const openEditModal = (acc) => {
+    setEditingAcc(acc);
+    setAccName(acc.name);
+    setAccPhone(acc.phone || '');
+    setAccEmail(acc.email || '');
+    setAccBaseNote(acc.baseNote || '');
+    setShowEditAcc(true);
+  };
+
+  const handleUpdateAccount = async (e) => {
+    e.preventDefault();
+    await updateAccount(editingAcc._id, {
+      name: accName,
+      phone: accPhone,
+      email: accEmail,
+      baseNote: accBaseNote
+    });
+    setShowEditAcc(false);
+    setEditingAcc(null);
+    setAccName('');
+    setAccPhone('');
+    setAccEmail('');
+    setAccBaseNote('');
+  };
+
+  const openNotifModal = (acc) => {
+    setNotifAcc(acc);
+    setShowNotifModal(true);
   };
 
   const handleAddTransaction = async (e) => {
@@ -347,10 +391,41 @@ const Accounts = () => {
             filteredAccounts.map(acc => (
               <div key={acc._id} className="glass-card account-card">
                 <div className="account-info">
-                  <h3>{acc.name}</h3>
-                  <span className="base-amount">Base: {formatCurrency(Math.abs(acc.currentBalance))}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <h3>{acc.name}</h3>
+                    <button
+                      className="icon-btn edit-btn"
+                      title="হিসাব এডিট করুন"
+                      onClick={() => openEditModal(acc)}
+                      style={{ padding: '4px', background: 'transparent', color: '#94a3b8' }}
+                    >
+                      <Edit3 size={15} />
+                    </button>
+                  </div>
+                  <div className="contact-badges" style={{ display: 'flex', gap: '8px', marginTop: '4px', flexWrap: 'wrap' }}>
+                    {acc.phone && (
+                      <span className="contact-badge" style={{ fontSize: '0.75rem', color: '#38bdf8', background: 'rgba(56, 189, 248, 0.12)', padding: '2px 8px', borderRadius: '12px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                        <Phone size={12} /> {acc.phone}
+                      </span>
+                    )}
+                    {acc.email && (
+                      <span className="contact-badge" style={{ fontSize: '0.75rem', color: '#818cf8', background: 'rgba(129, 140, 248, 0.12)', padding: '2px 8px', borderRadius: '12px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                        <Mail size={12} /> {acc.email}
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <div className="account-actions">
+                  {/* Notification / Message Button */}
+                  <button
+                    className="icon-btn notif-btn"
+                    title="মেসেজ ও নোটিফিকেশন পাঠান"
+                    onClick={() => openNotifModal(acc)}
+                    style={{ background: 'rgba(99, 102, 241, 0.15)', color: '#818cf8', border: '1px solid rgba(99, 102, 241, 0.3)' }}
+                  >
+                    <Bell size={18} />
+                  </button>
+
                   {/* History Button */}
                   <button
                     className="icon-btn history-btn"
@@ -560,8 +635,16 @@ const Accounts = () => {
               <form onSubmit={handleAddAccount} style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
                 <div className="fp-content">
                   <div className="input-group">
-                    <label className="input-label">Account Name / হিসাবের নাম</label>
-                    <input required className="input-field" value={accName} onChange={e => setAccName(e.target.value)} placeholder="Enter account name" />
+                    <label className="input-label">Account Name / হিসাবের নাম *</label>
+                    <input required className="input-field" value={accName} onChange={e => setAccName(e.target.value)} placeholder="উদা: রহিম সাহেব, করিম ট্রেডার্স" />
+                  </div>
+                  <div className="input-group">
+                    <label className="input-label">Phone Number / মোবাইল নম্বর (মেসেজের জন্য)</label>
+                    <input className="input-field" value={accPhone} onChange={e => setAccPhone(e.target.value)} placeholder="উদা: 01700000000" />
+                  </div>
+                  <div className="input-group">
+                    <label className="input-label">Email Address / ইমেইল (নোটিফিকেশনের জন্য)</label>
+                    <input type="email" className="input-field" value={accEmail} onChange={e => setAccEmail(e.target.value)} placeholder="উদা: customer@example.com" />
                   </div>
                   <div className="input-group">
                     <label className="input-label">Starting Balance / প্রারম্ভিক ব্যালেন্স</label>
@@ -583,6 +666,46 @@ const Accounts = () => {
                   <div className="fp-footer-buttons">
                     <button type="button" className="btn btn-ghost" onClick={() => setShowAddAcc(false)}>Cancel</button>
                     <button type="submit" className="btn btn-primary">Add Account</button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Edit Account Modal */}
+        {showEditAcc && editingAcc && (
+          <div className="full-page-overlay animate-slide-up">
+            <div className="full-page-container">
+              <div className="fp-header">
+                <h3>Edit Account / হিসাব পরিবর্তন</h3>
+                <button className="fp-close-btn" onClick={() => setShowEditAcc(false)}>
+                  <X size={24} />
+                </button>
+              </div>
+              <form onSubmit={handleUpdateAccount} style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+                <div className="fp-content">
+                  <div className="input-group">
+                    <label className="input-label">Account Name / হিসাবের নাম *</label>
+                    <input required className="input-field" value={accName} onChange={e => setAccName(e.target.value)} placeholder="হিসাবের নাম" />
+                  </div>
+                  <div className="input-group">
+                    <label className="input-label">Phone Number / মোবাইল নম্বর</label>
+                    <input className="input-field" value={accPhone} onChange={e => setAccPhone(e.target.value)} placeholder="e.g. 01700000000" />
+                  </div>
+                  <div className="input-group">
+                    <label className="input-label">Email Address / ইমেইল</label>
+                    <input type="email" className="input-field" value={accEmail} onChange={e => setAccEmail(e.target.value)} placeholder="e.g. email@example.com" />
+                  </div>
+                  <div className="input-group">
+                    <label className="input-label">Note / বিবরণ</label>
+                    <input className="input-field" value={accBaseNote} onChange={e => setAccBaseNote(e.target.value)} placeholder="বিবরণ" />
+                  </div>
+                </div>
+                <div className="fp-footer">
+                  <div className="fp-footer-buttons">
+                    <button type="button" className="btn btn-ghost" onClick={() => setShowEditAcc(false)}>Cancel</button>
+                    <button type="submit" className="btn btn-primary">Save Changes</button>
                   </div>
                 </div>
               </form>
@@ -951,6 +1074,13 @@ const Accounts = () => {
               </div>
             </div>
           )}
+
+          {/* Notification / Message Modal */}
+          <NotificationModal 
+            isOpen={showNotifModal} 
+            onClose={() => setShowNotifModal(false)} 
+            account={notifAcc} 
+          />
         </div>
       </>,
       document.body

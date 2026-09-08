@@ -49,10 +49,17 @@ export const AccountsProvider = ({ children }) => {
     }
   }, [isAuthenticated]);
 
-  const addAccount = async (name, baseAmount, baseNote) => {
-    const res = await api.post('/accounts', { name, baseAmount, baseNote });
+  const addAccount = async (name, baseAmount, baseNote, phone = '', email = '') => {
+    const res = await api.post('/accounts', { name, baseAmount, baseNote, phone, email });
     const newAcc = res.data.data;
     setAccounts([...accounts, { ...newAcc, currentBalance: computeBalance(newAcc) }]);
+  };
+
+  const updateAccount = async (id, data) => {
+    const res = await api.put(`/accounts/${id}`, data);
+    const updated = res.data.data;
+    setAccounts(accounts.map(a => a._id === id ? { ...updated, currentBalance: computeBalance(updated) } : a));
+    return updated;
   };
 
   const deleteAccount = async (id) => {
@@ -115,7 +122,7 @@ export const AccountsProvider = ({ children }) => {
   return (
     <AccountsContext.Provider value={{
       accounts, deletedAccounts, personalAccounts, sharedAccounts, personalTotal, sharedTotal, loading,
-      fetchAccounts, fetchDeletedAccounts, addAccount, deleteAccount, addTransaction, deleteTransaction, shareAccount, shareAllAccounts, restoreAccount, hardDeleteAccount
+      fetchAccounts, fetchDeletedAccounts, addAccount, updateAccount, deleteAccount, addTransaction, deleteTransaction, shareAccount, shareAllAccounts, restoreAccount, hardDeleteAccount
     }}>
       {children}
     </AccountsContext.Provider>
