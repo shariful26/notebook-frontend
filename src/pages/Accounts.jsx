@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { useAccounts } from '../context/AccountsContext';
 import { useAuth } from '../context/AuthContext';
 import api from '../api';
-import { Plus, Minus, Share2, FolderOpen, Trash2, History, TrendingUp, TrendingDown, X, ArrowUpCircle, ArrowDownCircle, FileDown, Image, Mail, Search, Bell, Edit3, Phone } from 'lucide-react';
+import { Plus, Minus, Share2, FolderOpen, Trash2, History, TrendingUp, TrendingDown, X, ArrowUpCircle, ArrowDownCircle, FileDown, Image, Mail, Search, Bell, Edit3, Phone, MoreVertical } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { downloadPDFFromHTML, emailPDFFromHTML } from '../utils/pdfGenerator';
 import NotificationModal from '../components/NotificationModal';
@@ -78,6 +78,7 @@ const Accounts = () => {
 
   // Notification Modal state
   const [showNotifModal, setShowNotifModal] = useState(false);
+  const [activeMenuId, setActiveMenuId] = useState(null);
   const [notifAcc, setNotifAcc] = useState(null);
 
   const [adminAccounts, setAdminAccounts] = useState([]);
@@ -389,19 +390,9 @@ const Accounts = () => {
             </div>
           ) : (
             filteredAccounts.map(acc => (
-              <div key={acc._id} className="glass-card account-card">
+              <div key={acc._id} className={`glass-card account-card ${activeMenuId === acc._id ? "menu-open" : ""}`}>
                 <div className="account-info">
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <h3>{acc.name}</h3>
-                    <button
-                      className="icon-btn edit-btn"
-                      title="হিসাব এডিট করুন"
-                      onClick={() => openEditModal(acc)}
-                      style={{ padding: '4px', background: 'transparent', color: '#94a3b8' }}
-                    >
-                      <Edit3 size={15} />
-                    </button>
-                  </div>
+                  <h3>{acc.name}</h3>
                   <div className="contact-badges" style={{ display: 'flex', gap: '8px', marginTop: '4px', flexWrap: 'wrap' }}>
                     {acc.phone && (
                       <span className="contact-badge" style={{ fontSize: '0.75rem', color: '#38bdf8', background: 'rgba(56, 189, 248, 0.12)', padding: '2px 8px', borderRadius: '12px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
@@ -416,41 +407,86 @@ const Accounts = () => {
                   </div>
                 </div>
                 <div className="account-actions">
-                  {/* Notification / Message Button */}
-                  <button
-                    className="icon-btn notif-btn"
-                    title="মেসেজ ও নোটিফিকেশন পাঠান"
-                    onClick={() => openNotifModal(acc)}
-                    style={{ background: 'rgba(99, 102, 241, 0.15)', color: '#818cf8', border: '1px solid rgba(99, 102, 241, 0.3)' }}
-                  >
-                    <Bell size={18} />
-                  </button>
-
-                  {/* History Button */}
-                  <button
-                    className="icon-btn history-btn"
-                    title="লেনদেনের ইতিহাস"
-                    onClick={() => openHistory(acc)}
-                  >
-                    <History size={18} />
-                  </button>
-
-                  <button className="icon-btn share-btn" onClick={() => { setActiveAcc(acc); setIsShareAll(false); setShowShare(true); }}>
-                    <Share2 size={18} />
-                  </button>
                   <div className={`current-balance ${acc.currentBalance > 0 ? 'negative' : acc.currentBalance < 0 ? 'positive' : ''}`}>
                     {formatCurrency(Math.abs(acc.currentBalance))}
                   </div>
-                  <button className="icon-btn add-btn" onClick={() => { setActiveAcc(acc); setTrxType('plus'); setShowTrx(true); }}>
+                  <button 
+                    className="icon-btn add-btn" 
+                    title="জমা (+)"
+                    onClick={() => { setActiveAcc(acc); setTrxType('plus'); setShowTrx(true); }}
+                  >
                     <Plus size={18} />
                   </button>
-                  <button className="icon-btn sub-btn" onClick={() => { setActiveAcc(acc); setTrxType('minus'); setShowTrx(true); }}>
+                  <button 
+                    className="icon-btn sub-btn" 
+                    title="খরচ (-)"
+                    onClick={() => { setActiveAcc(acc); setTrxType('minus'); setShowTrx(true); }}
+                  >
                     <Minus size={18} />
                   </button>
                   <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.2)', margin: '0 4px' }}></div>
-                  <button className="icon-btn" style={{ color: 'var(--danger)' }} onClick={() => { if (window.confirm('Delete this account to Recycle Bin?')) deleteAccount(acc._id); }}>
-                    <Trash2 size={18} />
-                  </button>
+                  
+                  {/* 3-Dots Action Menu */}
+                  <div className="action-menu-container">
+                    <button
+                      className={`icon-btn menu-btn ${activeMenuId === acc._id ? 'active' : ''}`}
+                      title="অপশনসমূহ"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveMenuId(activeMenuId === acc._id ? null : acc._id);
+                      }}
+                    >
+                      <MoreVertical size={18} />
+                    </button>
+
+                    {activeMenuId === acc._id && (
+                      <>
+                        <div 
+                          className="menu-backdrop" 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setActiveMenuId(null);
+                          }} 
+                        />
+                        <div className="action-dropdown-menu animate-fade-in" onClick={(e) => e.stopPropagation()}>
+                          <button 
+                            className="dropdown-item" 
+                            onClick={() => { setActiveMenuId(null); openEditModal(acc); }}
+                          >
+                            <Edit3 size={16} /> <span>এডিট করুন (Edit)</span>
+                          </button>
+                          <button 
+                            className="dropdown-item" 
+                            onClick={() => { setActiveMenuId(null); openNotifModal(acc); }}
+                          >
+                            <Bell size={16} /> <span>নোটিফিকেশন (Notification)</span>
+                          </button>
+                          <button 
+                            className="dropdown-item" 
+                            onClick={() => { setActiveMenuId(null); openHistory(acc); }}
+                          >
+                            <History size={16} /> <span>ইতিহাস (History)</span>
+                          </button>
+                          <button 
+                            className="dropdown-item" 
+                            onClick={() => { setActiveMenuId(null); setActiveAcc(acc); setIsShareAll(false); setShowShare(true); }}
+                          >
+                            <Share2 size={16} /> <span>শেয়ার করুন (Share)</span>
+                          </button>
+                          <div className="dropdown-divider"></div>
+                          <button 
+                            className="dropdown-item danger" 
+                            onClick={() => { 
+                              setActiveMenuId(null); 
+                              if (window.confirm('Delete this account to Recycle Bin?')) deleteAccount(acc._id); 
+                            }}
+                          >
+                            <Trash2 size={16} /> <span>ডিলিট করুন (Delete)</span>
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
             ))
@@ -1007,81 +1043,83 @@ const Accounts = () => {
               </table>
             </>
           )}
-          {showEmailModal && (
-            <div className="note-modal-overlay" onClick={() => setShowEmailModal(false)}>
-              <div className="note-modal-content animate-slide-up" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '500px' }}>
-                <div className="note-modal-header">
-                  <h3>✉️ ইমেইল স্টেটমেন্ট পাঠান</h3>
-                  <button className="fp-close-btn" onClick={() => setShowEmailModal(false)}>
-                    <X size={20} />
+        </div>
+
+        {/* Email Statement Modal */}
+        {showEmailModal && (
+          <div className="note-modal-overlay" onClick={() => setShowEmailModal(false)}>
+            <div className="note-modal-content animate-slide-up" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '500px' }}>
+              <div className="note-modal-header">
+                <h3>✉️ ইমেইল স্টেটমেন্ট পাঠান</h3>
+                <button className="fp-close-btn" onClick={() => setShowEmailModal(false)}>
+                  <X size={20} />
+                </button>
+              </div>
+              <form onSubmit={handleEmailSinglePDF}>
+                <div className="note-modal-body" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  <div className="input-group">
+                    <label className="input-label" style={{ marginBottom: '6px', display: 'block', fontSize: '0.9rem', textAlign: 'left' }}>কার কাছে পাঠাবেন (ইমেইল)</label>
+                    <input 
+                      type="email" 
+                      className="input-field" 
+                      value={emailTo} 
+                      onChange={(e) => setEmailTo(e.target.value)} 
+                      required 
+                      placeholder="recipient@example.com"
+                    />
+                  </div>
+                  <div className="input-group">
+                    <label className="input-label" style={{ marginBottom: '6px', display: 'block', fontSize: '0.9rem', textAlign: 'left' }}>ইমেইল বিষয় (Subject)</label>
+                    <input 
+                      type="text" 
+                      className="input-field" 
+                      value={emailSubject} 
+                      onChange={(e) => setEmailSubject(e.target.value)} 
+                      required 
+                      placeholder="ইমেইল বিষয় লিখুন"
+                    />
+                  </div>
+                  <div className="input-group">
+                    <label className="input-label" style={{ marginBottom: '6px', display: 'block', fontSize: '0.9rem', textAlign: 'left' }}>বার্তা (Custom Message)</label>
+                    <textarea 
+                      className="input-field" 
+                      rows="5"
+                      value={emailBody} 
+                      onChange={(e) => setEmailBody(e.target.value)} 
+                      required
+                      placeholder="আপনার বার্তা লিখুন..."
+                      style={{ resize: 'vertical' }}
+                    />
+                  </div>
+                </div>
+                <div className="note-modal-footer" style={{ gap: '12px' }}>
+                  <button type="button" className="btn btn-secondary" style={{ flex: 1 }} onClick={() => setShowEmailModal(false)}>বাতিল করুন</button>
+                  <button type="submit" className="btn btn-primary" style={{ flex: 1 }} disabled={emailLoading}>
+                    {emailLoading ? "পাঠানো হচ্ছে..." : "ইমেইল পাঠান"}
                   </button>
                 </div>
-                <form onSubmit={handleEmailSinglePDF}>
-                  <div className="note-modal-body" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                    <div className="input-group">
-                      <label className="input-label" style={{ marginBottom: '6px', display: 'block', fontSize: '0.9rem', textAlign: 'left' }}>কার কাছে পাঠাবেন (ইমেইল)</label>
-                      <input 
-                        type="email" 
-                        className="input-field" 
-                        value={emailTo} 
-                        onChange={(e) => setEmailTo(e.target.value)} 
-                        required 
-                        placeholder="recipient@example.com"
-                      />
-                    </div>
-                    <div className="input-group">
-                      <label className="input-label" style={{ marginBottom: '6px', display: 'block', fontSize: '0.9rem', textAlign: 'left' }}>ইমেইল বিষয় (Subject)</label>
-                      <input 
-                        type="text" 
-                        className="input-field" 
-                        value={emailSubject} 
-                        onChange={(e) => setEmailSubject(e.target.value)} 
-                        required 
-                        placeholder="ইমেইল বিষয় লিখুন"
-                      />
-                    </div>
-                    <div className="input-group">
-                      <label className="input-label" style={{ marginBottom: '6px', display: 'block', fontSize: '0.9rem', textAlign: 'left' }}>বার্তা (Custom Message)</label>
-                      <textarea 
-                        className="input-field" 
-                        rows="5"
-                        value={emailBody} 
-                        onChange={(e) => setEmailBody(e.target.value)} 
-                        required
-                        placeholder="আপনার বার্তা লিখুন..."
-                        style={{ resize: 'vertical' }}
-                      />
-                    </div>
-                  </div>
-                  <div className="note-modal-footer" style={{ gap: '12px' }}>
-                    <button type="button" className="btn btn-secondary" style={{ flex: 1 }} onClick={() => setShowEmailModal(false)}>বাতিল করুন</button>
-                    <button type="submit" className="btn btn-primary" style={{ flex: 1 }} disabled={emailLoading}>
-                      {emailLoading ? "পাঠানো হচ্ছে..." : "ইমেইল পাঠান"}
-                    </button>
-                  </div>
-                </form>
-              </div>
+              </form>
             </div>
-          )}
+          </div>
+        )}
 
-          {emailLoading && (
-            <div className="note-modal-overlay" style={{ zIndex: 99999, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(15, 23, 42, 0.75)', backdropFilter: 'blur(4px)' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
-                <div className="spinner"></div>
-                <p style={{ color: 'white', fontWeight: '500', fontSize: '1rem', textShadow: '0 2px 4px rgba(0,0,0,0.5)', margin: 0 }}>
-                  ইমেইল স্টেটমেন্ট তৈরি ও পাঠানো হচ্ছে... অনুগ্রহ করে অপেক্ষা করুন
-                </p>
-              </div>
+        {emailLoading && (
+          <div className="note-modal-overlay" style={{ zIndex: 99999, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(15, 23, 42, 0.75)', backdropFilter: 'blur(4px)' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+              <div className="spinner"></div>
+              <p style={{ color: 'white', fontWeight: '500', fontSize: '1rem', textShadow: '0 2px 4px rgba(0,0,0,0.5)', margin: 0 }}>
+                ইমেইল স্টেটমেন্ট তৈরি ও পাঠানো হচ্ছে... অনুগ্রহ করে অপেক্ষা করুন
+              </p>
             </div>
-          )}
+          </div>
+        )}
 
-          {/* Notification / Message Modal */}
-          <NotificationModal 
-            isOpen={showNotifModal} 
-            onClose={() => setShowNotifModal(false)} 
-            account={notifAcc} 
-          />
-        </div>
+        {/* Notification / Message Modal */}
+        <NotificationModal 
+          isOpen={showNotifModal} 
+          onClose={() => setShowNotifModal(false)} 
+          account={notifAcc} 
+        />
       </>,
       document.body
     )}

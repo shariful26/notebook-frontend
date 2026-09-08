@@ -806,3 +806,122 @@
 
 
 
+
+
+
+/* 3-Dots Action Menu Styles */
+.account-card {
+  position: relative;
+  overflow: visible !important;
+}
+
+.account-card.menu-open {
+  z-index: 10000 !important;
+}
+
+.account-actions {
+  position: relative;
+  overflow: visible !important;
+}
+
+.action-menu-container {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.menu-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 9998;
+  background: transparent;
+}
+
+/* Bright & Eye-Catching Three-Dot Icon Button */
+.icon-btn.menu-btn {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  box-shadow: 0 0 14px rgba(99, 102, 241, 0.7), 0 2px 6px rgba(0, 0, 0, 0.4) !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.icon-btn.menu-btn:hover,
+.icon-btn.menu-btn.active {
+  background: linear-gradient(135deg, #4f46e5, #7c3aed) !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 22px rgba(139, 92, 246, 0.95), 0 4px 12px rgba(0, 0, 0, 0.5) !important;
+  transform: scale(1.12) !important;
+}
+
+/* Super Clear, Opaque & Crisp Dropdown Menu */
+.action-dropdown-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  z-index: 10001;
+  min-width: 220px;
+  background: #0f172a !important; /* Solid dark color so background never bleeds through */
+  border: 1.5px solid #6366f1 !important; /* Vibrant indigo accent border */
+  border-radius: 14px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.95), 0 0 20px rgba(99, 102, 241, 0.3) !important;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow: visible;
+}
+
+.action-dropdown-menu .dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 11px 16px;
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  color: #f8fafc !important; /* Bright white text */
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s ease-in-out;
+}
+
+.action-dropdown-menu .dropdown-item svg {
+  color: #818cf8; /* Vibrant indigo icon color */
+  flex-shrink: 0;
+}
+
+.action-dropdown-menu .dropdown-item:hover {
+  background: #1e293b !important;
+  color: #ffffff !important;
+  transform: translateX(4px);
+}
+
+.action-dropdown-menu .dropdown-item:hover svg {
+  color: #a5b4fc;
+}
+
+.action-dropdown-menu .dropdown-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.15);
+  margin: 6px 0;
+}
+
+.action-dropdown-menu .dropdown-item.danger {
+  color: #f87171 !important;
+}
+
+.action-dropdown-menu .dropdown-item.danger svg {
+  color: #f87171 !important;
+}
+
+.action-dropdown-menu .dropdown-item.danger:hover {
+  background: rgba(239, 68, 68, 0.25) !important;
+  color: #ff8787 !important;
+}

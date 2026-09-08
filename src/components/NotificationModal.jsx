@@ -18,16 +18,15 @@ import {
 import './NotificationModal.css';
 
 const NotificationModal = ({ isOpen, onClose, account }) => {
-  if (!isOpen || !account) return null;
-
+  // Always invoke hooks unconditionally at the top level of the component
   const [activeTab, setActiveTab] = useState('send'); // 'send' or 'history'
   const [channel, setChannel] = useState('email'); // 'email', 'whatsapp', 'sms'
   const [templateType, setTemplateType] = useState('receivable'); // 'receivable', 'payable', 'statement', 'custom'
   
-  const [phone, setPhone] = useState(account.phone || '');
-  const [email, setEmail] = useState(account.email || '');
+  const [phone, setPhone] = useState(account?.phone || '');
+  const [email, setEmail] = useState(account?.email || '');
   const [customNote, setCustomNote] = useState('');
-  const [subject, setSubject] = useState(`📌 স্মার্ট নোটবুক রিমাইন্ডার - ${account.name}`);
+  const [subject, setSubject] = useState(account ? `📌 স্মার্ট নোটবুক রিমাইন্ডার - ${account.name}` : '');
   
   const [loading, setLoading] = useState(false);
   const [historyLoading, setHistoryLoading] = useState(false);
@@ -35,30 +34,34 @@ const NotificationModal = ({ isOpen, onClose, account }) => {
   const [statusMsg, setStatusMsg] = useState({ type: '', text: '' });
   const [copied, setCopied] = useState(false);
 
-  const balance = account.currentBalance || 0;
+  const balance = account?.currentBalance || 0;
   const isReceivable = balance >= 0;
 
   useEffect(() => {
-    setPhone(account.phone || '');
-    setEmail(account.email || '');
-    setCustomNote('');
-    setStatusMsg({ type: '', text: '' });
-    
-    // Auto pick template based on balance
-    if (balance >= 0) {
-      setTemplateType('receivable');
-    } else {
-      setTemplateType('payable');
+    if (account && isOpen) {
+      setPhone(account.phone || '');
+      setEmail(account.email || '');
+      setCustomNote('');
+      setSubject(`📌 স্মার্ট নোটবুক রিমাইন্ডার - ${account.name}`);
+      setStatusMsg({ type: '', text: '' });
+      setLoading(false);
+      
+      if ((account.currentBalance || 0) >= 0) {
+        setTemplateType('receivable');
+      } else {
+        setTemplateType('payable');
+      }
     }
-  }, [account]);
+  }, [account, isOpen]);
 
   useEffect(() => {
-    if (activeTab === 'history') {
+    if (isOpen && account && activeTab === 'history') {
       fetchHistory();
     }
-  }, [activeTab, account]);
+  }, [activeTab, account, isOpen]);
 
   const fetchHistory = async () => {
+    if (!account) return;
     try {
       setHistoryLoading(true);
       const res = await api.get(`/notifications/history?accountId=${account._id}`);
@@ -74,24 +77,35 @@ const NotificationModal = ({ isOpen, onClose, account }) => {
 
   // Generate body text based on template selection
   const generateMessageBody = () => {
+    if (!account) return '';
     const formattedBalance = Math.abs(balance).toLocaleString('bn-BD');
 
     let baseText = '';
     if (templateType === 'receivable') {
-      baseText = `প্রিয় ${account.name},\nস্মার্ট নোটবুকের হিসাব অনুযায়ী আপনার কাছে ${formattedBalance} ৳ পাওনা রয়েছে। অনুগ্রহ করে দ্রুত পরিশোধের ব্যবস্থা করার অনুরোধ জানাচ্ছি।`;
+      baseText = `প্রিয় ${account.name},
+স্মার্ট নোটবুকের হিসাব অনুযায়ী আপনার কাছে ${formattedBalance} ৳ পাওনা রয়েছে। অনুগ্রহ করে দ্রুত পরিশোধের ব্যবস্থা করার অনুরোধ জানাচ্ছি।`;
     } else if (templateType === 'payable') {
-      baseText = `প্রিয় ${account.name},\nআপনার হিসাব অনুযায়ী আপনার পাওনা ${formattedBalance} ৳ পরিশোধ সংক্রান্ত আপডেট। দ্রুত তা পরিশোধ করার প্রক্রিয়া চলছে।`;
+      baseText = `প্রিয় ${account.name},
+আপনার হিসাব অনুযায়ী আপনার পাওনা ${formattedBalance} ৳ পরিশোধ সংক্রান্ত আপডেট। দ্রুত তা পরিশোধ করার প্রক্রিয়া চলছে।`;
     } else if (templateType === 'statement') {
-      baseText = `প্রিয় ${account.name},\nআপনার হিসাব খাতা বিবরণী (Statement):\nখাতার নাম: ${account.name}\nবর্তমান স্থিতু/ব্যালেন্স: ${formattedBalance} ৳ (${isReceivable ? 'পাবো' : 'দেনা'})।`;
+      baseText = `প্রিয় ${account.name},
+আপনার হিসাব খাতা বিবরণী (Statement):
+খাতার নাম: ${account.name}
+বর্তমান স্থিতু/ব্যালেন্স: ${formattedBalance} ৳ (${isReceivable ? 'পাবো' : 'দেনা'})।`;
     } else {
-      baseText = `প্রিয় ${account.name},\nআপনার জন্য একটি নোট দেওয়া হলো:`;
+      baseText = `প্রিয় ${account.name},
+আপনার জন্য একটি নোট দেওয়া হলো:`;
     }
 
     if (customNote.trim()) {
-      baseText += `\n\n📝 নোট: ${customNote.trim()}`;
+      baseText += `
+
+📝 নোট: ${customNote.trim()}`;
     }
 
-    baseText += `\n\n- Smart Notebook (স্মার্ট নোটবুক)`;
+    baseText += `
+
+- Smart Notebook (স্মার্ট নোটবুক)`;
     return baseText;
   };
 
@@ -104,7 +118,8 @@ const NotificationModal = ({ isOpen, onClose, account }) => {
   };
 
   const handleSendEmail = async () => {
-    if (!email) {
+    const targetEmail = email.trim();
+    if (!targetEmail) {
       setStatusMsg({ type: 'error', text: 'অনুগ্রহ করে প্রাপ্তিকারীর ইমেইল প্রদান করুন।' });
       return;
     }
@@ -115,7 +130,7 @@ const NotificationModal = ({ isOpen, onClose, account }) => {
 
       const res = await api.post('/notifications/send-email', {
         accountId: account._id,
-        email,
+        email: targetEmail,
         subject,
         note: customNote,
         messageText,
@@ -139,37 +154,42 @@ const NotificationModal = ({ isOpen, onClose, account }) => {
   };
 
   const handleSendWhatsApp = async () => {
-    if (!phone) {
+    const targetPhone = phone.trim();
+    if (!targetPhone) {
       setStatusMsg({ type: 'error', text: 'অনুগ্রহ করে প্রাপ্তিকারীর মোবাইল নম্বর প্রদান করুন।' });
       return;
     }
 
     try {
       setLoading(true);
-      // Clean phone number (remove spaces, hyphens)
-      let cleanPhone = phone.replace(/[^\d+]/g, '');
+      setStatusMsg({ type: '', text: '' });
+
+      let cleanPhone = targetPhone.replace(/[^\d+]/g, '');
       if (cleanPhone.startsWith('0')) {
-        cleanPhone = '88' + cleanPhone; // Bangladesh default country code prefix
+        cleanPhone = '88' + cleanPhone;
       }
 
-      // Log notification
-      await api.post('/notifications/log', {
+      const encodedMsg = encodeURIComponent(messageText);
+      const waUrl = `https://wa.me/${cleanPhone}?text=${encodedMsg}`;
+      
+      // Open window immediately to prevent popup blocking
+      const waWindow = window.open(waUrl, '_blank', 'noopener,noreferrer');
+      if (!waWindow) {
+        window.location.href = waUrl;
+      }
+
+      // Log notification in background
+      api.post('/notifications/log', {
         accountId: account._id,
-        recipientPhone: phone,
+        recipientPhone: targetPhone,
         channel: 'whatsapp',
         templateType,
         note: customNote,
         messageText,
         amount: balance,
-      });
-
-      // Open WhatsApp chat with prefilled message
-      const encodedMsg = encodeURIComponent(messageText);
-      const waUrl = `https://wa.me/${cleanPhone}?text=${encodedMsg}`;
-      window.open(waUrl, '_blank');
+      }).then(() => fetchHistory()).catch(err => console.error('Log error:', err));
 
       setStatusMsg({ type: 'success', text: '💬 হোয়াটসঅ্যাপে রিমাইন্ডার পাঠানো হচ্ছে...' });
-      fetchHistory();
     } catch (err) {
       console.error('WhatsApp dispatch error:', err);
       setStatusMsg({ type: 'error', text: 'হোয়াটসঅ্যাপ রিডাইরেক্ট করতে সমস্যা হয়েছে।' });
@@ -179,32 +199,34 @@ const NotificationModal = ({ isOpen, onClose, account }) => {
   };
 
   const handleSendSMS = async () => {
-    if (!phone) {
+    const targetPhone = phone.trim();
+    if (!targetPhone) {
       setStatusMsg({ type: 'error', text: 'অনুগ্রহ করে প্রাপ্তিকারীর মোবাইল নম্বর প্রদান করুন।' });
       return;
     }
 
     try {
       setLoading(true);
-      let cleanPhone = phone.replace(/[^\d+]/g, '');
+      setStatusMsg({ type: '', text: '' });
 
-      // Log notification
-      await api.post('/notifications/log', {
+      let cleanPhone = targetPhone.replace(/[^\d+]/g, '');
+      const encodedMsg = encodeURIComponent(messageText);
+
+      // Trigger native SMS app
+      window.location.href = `sms:${cleanPhone}?body=${encodedMsg}`;
+
+      // Log notification in background
+      api.post('/notifications/log', {
         accountId: account._id,
-        recipientPhone: phone,
+        recipientPhone: targetPhone,
         channel: 'sms',
         templateType,
         note: customNote,
         messageText,
         amount: balance,
-      });
-
-      // Trigger native SMS app
-      const encodedMsg = encodeURIComponent(messageText);
-      window.location.href = `sms:${cleanPhone}?body=${encodedMsg}`;
+      }).then(() => fetchHistory()).catch(err => console.error('Log error:', err));
 
       setStatusMsg({ type: 'success', text: '📱 মেসেজ ডায়ালগ ওপেন হচ্ছে...' });
-      fetchHistory();
     } catch (err) {
       console.error('SMS error:', err);
       setStatusMsg({ type: 'error', text: 'মেসেজ ওপেন করতে সমস্যা হয়েছে।' });
@@ -213,9 +235,12 @@ const NotificationModal = ({ isOpen, onClose, account }) => {
     }
   };
 
+  // Conditional early return AFTER all hooks have been declared unconditionally
+  if (!isOpen || !account) return null;
+
   return (
-    <div className="modal-backdrop">
-      <div className="glass-panel notification-modal animate-fade-in">
+    <div className="modal-backdrop animate-fade-in">
+      <div className="glass-panel notification-modal animate-slide-up">
         
         {/* Modal Header */}
         <div className="modal-header">
@@ -236,6 +261,7 @@ const NotificationModal = ({ isOpen, onClose, account }) => {
         {/* Tab Navigation */}
         <div className="modal-tabs">
           <button 
+            type="button"
             className={`tab-btn ${activeTab === 'send' ? 'active' : ''}`}
             onClick={() => setActiveTab('send')}
           >
@@ -243,6 +269,7 @@ const NotificationModal = ({ isOpen, onClose, account }) => {
             <span>নতুন মেসেজ পাঠান</span>
           </button>
           <button 
+            type="button"
             className={`tab-btn ${activeTab === 'history' ? 'active' : ''}`}
             onClick={() => setActiveTab('history')}
           >
