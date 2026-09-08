@@ -258,3 +258,63 @@
 .timestamp {
   color: #64748b;
 }
+
+/* Mobile Responsive Adjustments */
+@media (max-width: 640px) {
+  .notifications-page {
+    gap: 14px;
+  }
+
+  .title-group {
+    gap: 12px;
+  }
+
+  .header-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+  }
+
+  .page-header h2 {
+    font-size: 1.15rem;
+  }
+
+  .page-header .subtitle {
+    font-size: 0.78rem;
+  }
+
+  .filter-bar {
+    padding: 12px;
+    gap: 10px;
+    border-radius: 14px;
+  }
+
+  .search-box {
+    min-width: 100%;
+  }
+
+  .filter-chips {
+    width: 100%;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .filter-chip {
+    white-space: nowrap;
+    padding: 6px 12px;
+    font-size: 0.78rem;
+  }
+
+  .logs-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .log-card {
+    padding: 14px;
+    border-radius: 14px;
+  }
+}
+

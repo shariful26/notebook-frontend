@@ -925,3 +925,108 @@
   background: rgba(239, 68, 68, 0.25) !important;
   color: #ff8787 !important;
 }
+
+/* Top Header Menu Styling */
+.top-action-menu-container {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.top-dropdown-menu {
+  right: 0;
+  top: calc(100% + 8px);
+  min-width: 230px;
+}
+
+/* Contact Details in 3-Dots Dropdown */
+.dropdown-contact-header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 4px;
+}
+
+.dropdown-contact-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  color: #e2e8f0;
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.dropdown-contact-item:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  transform: translateX(2px);
+}
+
+/* ─── Premium Mobile View Clean-Up ─── */
+@media (max-width: 640px) {
+  .desktop-contact-badges {
+    display: none !important;
+  }
+
+  .btn-text-desktop {
+    display: none;
+  }
+
+  .add-acc-top-btn {
+    padding: 8px 14px !important;
+    border-radius: 10px !important;
+  }
+
+  .account-card {
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 14px 16px !important;
+    gap: 12px !important;
+    border-radius: 14px !important;
+    background: rgba(30, 41, 59, 0.5) !important;
+    backdrop-filter: blur(12px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  }
+
+  .account-info {
+    width: auto !important;
+    flex: 1 !important;
+    min-width: 0 !important;
+  }
+
+  .account-info h3 {
+    font-size: 1.05rem !important;
+    font-weight: 600 !important;
+    margin: 0 !important;
+    color: #f8fafc !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .account-actions {
+    width: auto !important;
+    padding-top: 0 !important;
+    border-top: none !important;
+    gap: 8px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .current-balance {
+    font-size: 1.05rem !important;
+    font-weight: 700 !important;
+    min-width: auto !important;
+  }
+
+  .icon-btn {
+    width: 36px !important;
+    height: 36px !important;
+  }
+}
+

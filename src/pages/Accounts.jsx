@@ -78,6 +78,7 @@ const Accounts = () => {
 
   // Notification Modal state
   const [showNotifModal, setShowNotifModal] = useState(false);
+  const [showTopMenu, setShowTopMenu] = useState(false);
   const [activeMenuId, setActiveMenuId] = useState(null);
   const [notifAcc, setNotifAcc] = useState(null);
 
@@ -331,28 +332,66 @@ const Accounts = () => {
   return (
     <>
       <div className="accounts-page animate-fade-in">
-        <div className="flex-between" style={{ marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
-          <h2>Accounts / হিসাব</h2>
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
-            {isAdmin && (
+        <div className="accounts-header-row flex-between" style={{ marginBottom: '20px', gap: '12px' }}>
+          <h2 style={{ margin: 0 }}>Accounts / হিসাব</h2>
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+            <button 
+              className="btn btn-primary add-acc-top-btn" 
+              title="নতুন হিসাব যোগ করুন" 
+              onClick={() => setShowAddAcc(true)}
+              style={{ gap: '6px' }}
+            >
+              <Plus size={18} /> <span className="btn-text-desktop">নতুন হিসাব</span>
+            </button>
+            
+            {/* Top Header Three-Dot Options Menu */}
+            <div className="top-action-menu-container">
               <button 
-                className="btn btn-primary" 
-                title="Download All Users PDF (Admin)" 
-                onClick={handleDownloadAllUsersPDF}
-                style={{ background: 'linear-gradient(135deg, #10b981, #059669)', gap: '6px' }}
+                className={`icon-btn menu-btn ${showTopMenu ? 'active' : ''}`}
+                title="মেনু অপশন"
+                onClick={() => setShowTopMenu(!showTopMenu)}
               >
-                <FileDown size={18} /> All Users PDF
+                <MoreVertical size={20} />
               </button>
-            )}
-            <button className="btn btn-ghost" title="Recycle Bin" onClick={() => navigate('/deleted-accounts')} style={{ color: 'var(--danger)' }}>
-              <Trash2 size={18} />
-            </button>
-            <button className="btn btn-ghost" title="Shared With Me" onClick={() => navigate('/shared-accounts')}>
-              <FolderOpen size={18} />
-            </button>
-            <button className="btn btn-primary" title="Share All" onClick={() => { setIsShareAll(true); setShowShare(true); }}>
-              <Share2 size={18} />
-            </button>
+
+              {showTopMenu && (
+                <>
+                  <div className="menu-backdrop" onClick={() => setShowTopMenu(false)} />
+                  <div className="action-dropdown-menu top-dropdown-menu animate-fade-in">
+                    <button 
+                      className="dropdown-item" 
+                      onClick={() => { setShowTopMenu(false); setIsShareAll(true); setShowShare(true); }}
+                    >
+                      <Share2 size={16} /> <span>সব হিসাব শেয়ার (Share All)</span>
+                    </button>
+                    <button 
+                      className="dropdown-item" 
+                      onClick={() => { setShowTopMenu(false); navigate('/shared-accounts'); }}
+                    >
+                      <FolderOpen size={16} /> <span>আমার সাথে শেয়ারকৃত (Shared)</span>
+                    </button>
+                    <button 
+                      className="dropdown-item danger" 
+                      onClick={() => { setShowTopMenu(false); navigate('/deleted-accounts'); }}
+                    >
+                      <Trash2 size={16} /> <span>ট্র্যাশ বিন (Recycle Bin)</span>
+                    </button>
+                    {isAdmin && (
+                      <>
+                        <div className="dropdown-divider"></div>
+                        <button 
+                          className="dropdown-item" 
+                          onClick={() => { setShowTopMenu(false); handleDownloadAllUsersPDF(); }}
+                          style={{ color: '#10b981' }}
+                        >
+                          <FileDown size={16} color="#10b981" /> <span>All Users PDF (Admin)</span>
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </div>
 
@@ -393,7 +432,8 @@ const Accounts = () => {
               <div key={acc._id} className={`glass-card account-card ${activeMenuId === acc._id ? "menu-open" : ""}`}>
                 <div className="account-info">
                   <h3>{acc.name}</h3>
-                  <div className="contact-badges" style={{ display: 'flex', gap: '8px', marginTop: '4px', flexWrap: 'wrap' }}>
+                  {/* Desktop Contact Badges (Hidden on mobile for super clean UI) */}
+                  <div className="contact-badges desktop-contact-badges" style={{ display: 'flex', gap: '8px', marginTop: '4px', flexWrap: 'wrap' }}>
                     {acc.phone && (
                       <span className="contact-badge" style={{ fontSize: '0.75rem', color: '#38bdf8', background: 'rgba(56, 189, 248, 0.12)', padding: '2px 8px', borderRadius: '12px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                         <Phone size={12} /> {acc.phone}
@@ -449,6 +489,21 @@ const Accounts = () => {
                           }} 
                         />
                         <div className="action-dropdown-menu animate-fade-in" onClick={(e) => e.stopPropagation()}>
+                          {(acc.phone || acc.email) && (
+                            <div className="dropdown-contact-header">
+                              {acc.phone && (
+                                <a href={`tel:${acc.phone}`} className="dropdown-contact-item">
+                                  <Phone size={13} color="#38bdf8" /> <span>{acc.phone}</span>
+                                </a>
+                              )}
+                              {acc.email && (
+                                <a href={`mailto:${acc.email}`} className="dropdown-contact-item">
+                                  <Mail size={13} color="#818cf8" /> <span>{acc.email}</span>
+                                </a>
+                              )}
+                              <div className="dropdown-divider"></div>
+                            </div>
+                          )}
                           <button 
                             className="dropdown-item" 
                             onClick={() => { setActiveMenuId(null); openEditModal(acc); }}
