@@ -112,8 +112,9 @@ const Accounts = () => {
   const [trxImage, setTrxImage] = useState('');
   const [imagePreview, setImagePreview] = useState('');
 
-  // Email statement loading state
+  // Email & PDF statement loading state
   const [emailLoading, setEmailLoading] = useState(false);
+  const [pdfLoading, setPdfLoading] = useState(false);
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [emailTo, setEmailTo] = useState('');
   const [emailSubject, setEmailSubject] = useState('');
@@ -235,25 +236,45 @@ const Accounts = () => {
   };
 
   const handleDownloadAllUsersPDF = async () => {
+    setPdfLoading(true);
     try {
-      const res = await api.get('/accounts/admin/all');
-      if (res.data && res.data.success) {
-        setAdminAccounts(res.data.data);
-        setTimeout(async () => {
-          await downloadPDFFromHTML('all-accounts-print', 'all_users_accounts_summary.pdf');
-          setAdminAccounts([]);
-        }, 200);
-      } else {
-        alert("Failed to fetch all accounts.");
+      let accountsToPrint = personalAccounts;
+      if (isAdmin) {
+        try {
+          const res = await api.get('/accounts/admin/all');
+          if (res.data && res.data.success && res.data.data.length > 0) {
+            accountsToPrint = res.data.data;
+          }
+        } catch (adminErr) {
+          console.warn("Admin all fetch failed, falling back to personalAccounts:", adminErr);
+        }
       }
+
+      if (!accountsToPrint || accountsToPrint.length === 0) {
+        alert("ডাউনলোড করার মতো কোনো হিসাব পাওয়া যায়নি।");
+        return;
+      }
+
+      setAdminAccounts(accountsToPrint);
+      await new Promise((resolve) => setTimeout(resolve, 400));
+      await downloadPDFFromHTML('all-accounts-print', 'all_accounts_summary.pdf');
     } catch (err) {
       console.error(err);
-      alert("Error fetching admin accounts data.");
+      alert("PDF ডাউনলোড করতে ব্যর্থ হয়েছে।");
+    } finally {
+      setAdminAccounts([]);
+      setPdfLoading(false);
     }
   };
 
   const handleDownloadSinglePDF = async (accountName) => {
-    await downloadPDFFromHTML('single-account-print', `${accountName}_hisab_sheet.pdf`);
+    setPdfLoading(true);
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 150));
+      await downloadPDFFromHTML('single-account-print', `${accountName}_hisab_sheet.pdf`);
+    } finally {
+      setPdfLoading(false);
+    }
   };
 
   const openEmailModal = (accountName) => {
@@ -376,18 +397,14 @@ const Accounts = () => {
                     >
                       <Trash2 size={16} /> <span>ট্র্যাশ বিন (Recycle Bin)</span>
                     </button>
-                    {isAdmin && (
-                      <>
-                        <div className="dropdown-divider"></div>
-                        <button 
-                          className="dropdown-item" 
-                          onClick={() => { setShowTopMenu(false); handleDownloadAllUsersPDF(); }}
-                          style={{ color: '#10b981' }}
-                        >
-                          <FileDown size={16} color="#10b981" /> <span>All Users PDF (Admin)</span>
-                        </button>
-                      </>
-                    )}
+                    <div className="dropdown-divider"></div>
+                    <button 
+                      className="dropdown-item" 
+                      onClick={() => { setShowTopMenu(false); handleDownloadAllUsersPDF(); }}
+                      style={{ color: '#10b981' }}
+                    >
+                      <FileDown size={16} color="#10b981" /> <span>সব হিসাবের PDF (All PDF)</span>
+                    </button>
                   </div>
                 </>
               )}
@@ -725,7 +742,7 @@ const Accounts = () => {
                   </button>
                 </div>
               </div>
-              <form onSubmit={handleAddAccount} style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+              <form onSubmit={handleAddAccount} style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflow: 'hidden' }}>
                 <div className="fp-content">
                   <div className="input-group">
                     <label className="input-label">Account Name *</label>
@@ -778,7 +795,7 @@ const Accounts = () => {
                   </button>
                 </div>
               </div>
-              <form onSubmit={handleUpdateAccount} style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+              <form onSubmit={handleUpdateAccount} style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflow: 'hidden' }}>
                 <div className="fp-content">
                   <div className="input-group">
                     <label className="input-label">Account Name *</label>
@@ -813,15 +830,17 @@ const Accounts = () => {
           <div className="full-page-overlay animate-slide-up">
             <div className="full-page-container">
               <div className="fp-header">
-                <div>
-                  <h3>{trxType === 'plus' ? 'ঋণ গ্রহণ / বকেয়া যোগ (+)' : 'ঋণ পরিশোধ / জমা (-)'}</h3>
-                  <p>for {activeAcc?.name}</p>
+                <div className="fp-header-main">
+                  <div>
+                    <h3>{trxType === 'plus' ? 'ঋণ গ্রহণ / বকেয়া যোগ (+)' : 'ঋণ পরিশোধ / জমা (-)'}</h3>
+                    <p>for {activeAcc?.name}</p>
+                  </div>
+                  <button className="fp-close-btn" onClick={() => setShowTrx(false)}>
+                    <X size={24} />
+                  </button>
                 </div>
-                <button className="fp-close-btn" onClick={() => setShowTrx(false)}>
-                  <X size={24} />
-                </button>
               </div>
-              <form onSubmit={handleAddTransaction} style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+              <form onSubmit={handleAddTransaction} style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflow: 'hidden' }}>
                 <div className="fp-content">
                   <div className="input-group">
                     <label className="input-label">Amount / পরিমাণ</label>
@@ -870,12 +889,14 @@ const Accounts = () => {
           <div className="full-page-overlay animate-slide-up">
             <div className="full-page-container">
               <div className="fp-header">
-                <h3>{isShareAll ? 'Share All Accounts' : `Share ${activeAcc?.name}`}</h3>
-                <button className="fp-close-btn" onClick={() => setShowShare(false)}>
-                  <X size={24} />
-                </button>
+                <div className="fp-header-main">
+                  <h3>{isShareAll ? 'Share All Accounts' : `Share ${activeAcc?.name}`}</h3>
+                  <button className="fp-close-btn" onClick={() => setShowShare(false)}>
+                    <X size={24} />
+                  </button>
+                </div>
               </div>
-              <form onSubmit={handleShareSubmit} style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+              <form onSubmit={handleShareSubmit} style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflow: 'hidden' }}>
                 <div className="fp-content">
                   <div className="input-group">
                     <label className="input-label">Select User to Share With</label>
@@ -1162,12 +1183,12 @@ const Accounts = () => {
           </div>
         )}
 
-        {emailLoading && (
-          <div className="note-modal-overlay" style={{ zIndex: 99999, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(15, 23, 42, 0.75)', backdropFilter: 'blur(4px)' }}>
+        {(emailLoading || pdfLoading) && (
+          <div className="note-modal-overlay" style={{ zIndex: 999999, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(15, 23, 42, 0.75)', backdropFilter: 'blur(4px)' }}>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
               <div className="spinner"></div>
               <p style={{ color: 'white', fontWeight: '500', fontSize: '1rem', textShadow: '0 2px 4px rgba(0,0,0,0.5)', margin: 0 }}>
-                ইমেইল স্টেটমেন্ট তৈরি ও পাঠানো হচ্ছে... অনুগ্রহ করে অপেক্ষা করুন
+                {pdfLoading ? 'PDF তৈরি ও ডাউনলোড হচ্ছে... অনুগ্রহ করে অপেক্ষা করুন' : 'ইমেইল স্টেটমেন্ট তৈরি ও পাঠানো হচ্ছে... অনুগ্রহ করে অপেক্ষা করুন'}
               </p>
             </div>
           </div>
