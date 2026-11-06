@@ -718,39 +718,41 @@ const Accounts = () => {
           <div className="full-page-overlay animate-slide-up">
             <div className="full-page-container">
               <div className="fp-header">
-                <h3>Add New Account / নতুন হিসাব</h3>
-                <button className="fp-close-btn" onClick={() => setShowAddAcc(false)}>
-                  <X size={24} />
-                </button>
+                <div className="fp-header-main">
+                  <h3>Add New Account</h3>
+                  <button className="fp-close-btn" onClick={() => setShowAddAcc(false)}>
+                    <X size={24} />
+                  </button>
+                </div>
               </div>
               <form onSubmit={handleAddAccount} style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
                 <div className="fp-content">
                   <div className="input-group">
-                    <label className="input-label">Account Name / হিসাবের নাম *</label>
-                    <input required className="input-field" value={accName} onChange={e => setAccName(e.target.value)} placeholder="উদা: রহিম সাহেব, করিম ট্রেডার্স" />
+                    <label className="input-label">Account Name *</label>
+                    <input required className="input-field" value={accName} onChange={e => setAccName(e.target.value)} placeholder="e.g. Rahim Sahab, Karim Traders" />
                   </div>
                   <div className="input-group">
-                    <label className="input-label">Phone Number / মোবাইল নম্বর (মেসেজের জন্য)</label>
-                    <input className="input-field" value={accPhone} onChange={e => setAccPhone(e.target.value)} placeholder="উদা: 01700000000" />
+                    <label className="input-label">Phone Number</label>
+                    <input className="input-field" value={accPhone} onChange={e => setAccPhone(e.target.value)} placeholder="e.g. 01700000000" />
                   </div>
                   <div className="input-group">
-                    <label className="input-label">Email Address / ইমেইল (নোটিফিকেশনের জন্য)</label>
-                    <input type="email" className="input-field" value={accEmail} onChange={e => setAccEmail(e.target.value)} placeholder="উদা: customer@example.com" />
+                    <label className="input-label">Email Address</label>
+                    <input type="email" className="input-field" value={accEmail} onChange={e => setAccEmail(e.target.value)} placeholder="e.g. customer@example.com" />
                   </div>
                   <div className="input-group">
-                    <label className="input-label">Starting Balance / প্রারম্ভিক ব্যালেন্স</label>
+                    <label className="input-label">Starting Balance</label>
                     <input required type="number" className="input-field" value={accBase} onChange={e => setAccBase(e.target.value)} placeholder="0" />
                   </div>
                   <div className="input-group">
-                    <label className="input-label">Balance Type / ধরণ</label>
+                    <label className="input-label">Balance Type</label>
                     <select className="input-field" value={accBaseType} onChange={e => setAccBaseType(e.target.value)}>
-                      <option value="plus">বকেয়া / ঋণ (+)</option>
-                      <option value="minus">পরিশোধ / অগ্রিম (-)</option>
+                      <option value="plus">Due / Loan (+)</option>
+                      <option value="minus">Paid / Advance (-)</option>
                     </select>
                   </div>
                   <div className="input-group">
-                    <label className="input-label">Note / বিবরণ (Optional)</label>
-                    <input className="input-field" value={accBaseNote} onChange={e => setAccBaseNote(e.target.value)} placeholder="উদা: প্রারম্ভিক হিসাব, ক্যাশ অন হ্যান্ড ইত্যাদি" />
+                    <label className="input-label">Note (Optional)</label>
+                    <input className="input-field" value={accBaseNote} onChange={e => setAccBaseNote(e.target.value)} placeholder="e.g. Initial balance, cash on hand" />
                   </div>
                 </div>
                 <div className="fp-footer">
@@ -769,28 +771,30 @@ const Accounts = () => {
           <div className="full-page-overlay animate-slide-up">
             <div className="full-page-container">
               <div className="fp-header">
-                <h3>Edit Account / হিসাব পরিবর্তন</h3>
-                <button className="fp-close-btn" onClick={() => setShowEditAcc(false)}>
-                  <X size={24} />
-                </button>
+                <div className="fp-header-main">
+                  <h3>Edit Account</h3>
+                  <button className="fp-close-btn" onClick={() => setShowEditAcc(false)}>
+                    <X size={24} />
+                  </button>
+                </div>
               </div>
               <form onSubmit={handleUpdateAccount} style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
                 <div className="fp-content">
                   <div className="input-group">
-                    <label className="input-label">Account Name / হিসাবের নাম *</label>
-                    <input required className="input-field" value={accName} onChange={e => setAccName(e.target.value)} placeholder="হিসাবের নাম" />
+                    <label className="input-label">Account Name *</label>
+                    <input required className="input-field" value={accName} onChange={e => setAccName(e.target.value)} placeholder="Account Name" />
                   </div>
                   <div className="input-group">
-                    <label className="input-label">Phone Number / মোবাইল নম্বর</label>
+                    <label className="input-label">Phone Number</label>
                     <input className="input-field" value={accPhone} onChange={e => setAccPhone(e.target.value)} placeholder="e.g. 01700000000" />
                   </div>
                   <div className="input-group">
-                    <label className="input-label">Email Address / ইমেইল</label>
+                    <label className="input-label">Email Address</label>
                     <input type="email" className="input-field" value={accEmail} onChange={e => setAccEmail(e.target.value)} placeholder="e.g. email@example.com" />
                   </div>
                   <div className="input-group">
-                    <label className="input-label">Note / বিবরণ</label>
-                    <input className="input-field" value={accBaseNote} onChange={e => setAccBaseNote(e.target.value)} placeholder="বিবরণ" />
+                    <label className="input-label">Note</label>
+                    <input className="input-field" value={accBaseNote} onChange={e => setAccBaseNote(e.target.value)} placeholder="Note" />
                   </div>
                 </div>
                 <div className="fp-footer">
