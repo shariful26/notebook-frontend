@@ -6,13 +6,31 @@ import {
   MessageSquare, 
   PhoneCall, 
   Search, 
-  Filter, 
   Clock, 
   User, 
   CheckCircle,
-  FileText
+  FileText,
+  Trash2
 } from 'lucide-react';
 import './Notifications.css';
+
+const getHiddenLogIds = () => {
+  try {
+    return JSON.parse(localStorage.getItem('deleted_notif_ids') || '[]');
+  } catch {
+    return [];
+  }
+};
+
+const addHiddenLogIds = (ids) => {
+  try {
+    const current = new Set(getHiddenLogIds());
+    ids.forEach((id) => current.add(id));
+    localStorage.setItem('deleted_notif_ids', JSON.stringify([...current]));
+  } catch {
+    // ignore storage errors
+  }
+};
 
 const Notifications = () => {
   const [logs, setLogs] = useState([]);
@@ -29,12 +47,49 @@ const Notifications = () => {
       setLoading(true);
       const res = await api.get('/notifications/history');
       if (res.data && res.data.success) {
-        setLogs(res.data.data);
+        const hiddenIds = new Set(getHiddenLogIds());
+        setLogs(res.data.data.filter((item) => !hiddenIds.has(item._id)));
       }
     } catch (err) {
       console.error('Failed to fetch notifications history:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteLog = async (id) => {
+    if (!window.confirm('আপনি কি এই নোটিফিকেশনটি ডিলিট করতে চান?')) return;
+    addHiddenLogIds([id]);
+    setLogs((prev) => prev.filter((log) => log._id !== id));
+    try {
+      await api.delete(`/notifications/${id}`);
+    } catch (err) {
+      console.warn('Backend delete fallback applied locally:', err);
+    }
+  };
+
+  const handleDeleteAll = async (channel = 'all') => {
+    const targetLogs = channel === 'all' ? logs : logs.filter((l) => l.channel === channel);
+    if (targetLogs.length === 0) return;
+
+    const channelLabel =
+      channel === 'email' ? 'ইমেইল' : channel === 'whatsapp' ? 'হোয়াটসঅ্যাপ' : channel === 'sms' ? 'SMS' : 'সকল';
+
+    if (!window.confirm(`আপনি কি ${channelLabel} নোটিফিকেশন (${targetLogs.length} টি) ডিলিট করতে চান?`)) return;
+
+    const idsToRemove = targetLogs.map((l) => l._id);
+    addHiddenLogIds(idsToRemove);
+
+    if (channel === 'all') {
+      setLogs([]);
+    } else {
+      setLogs((prev) => prev.filter((l) => l.channel !== channel));
+    }
+
+    try {
+      await api.delete(channel === 'all' ? '/notifications' : `/notifications?channel=${channel}`);
+    } catch (err) {
+      console.warn('Backend bulk delete fallback applied locally:', err);
     }
   };
 
@@ -64,6 +119,33 @@ const Notifications = () => {
             <p className="subtitle">সকল হিসাবের প্রেরিত মেসেজ ও ইমেইল নোটিফিকেশনের রেকর্ডসমূহ</p>
           </div>
         </div>
+
+        {logs.length > 0 && (
+          <div className="header-delete-actions">
+            {channelFilter !== 'all' && filteredLogs.length > 0 && (
+              <button
+                type="button"
+                className="btn-delete-channel"
+                onClick={() => handleDeleteAll(channelFilter)}
+                title="এই ক্যাটাগরির সব নোটিফিকেশন ডিলিট করুন"
+              >
+                <Trash2 size={15} />
+                <span>
+                  {channelFilter === 'email' ? 'সব ইমেইল ডিলিট' : channelFilter === 'whatsapp' ? 'সব হোয়াটসঅ্যাপ ডিলিট' : 'সব SMS ডিলিট'} ({filteredLogs.length})
+                </span>
+              </button>
+            )}
+            <button
+              type="button"
+              className="btn-delete-all"
+              onClick={() => handleDeleteAll('all')}
+              title="সব নোটিফিকেশন ডিলিট করুন"
+            >
+              <Trash2 size={16} />
+              <span>সব ডিলিট করুন ({logs.length})</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Filter and Search Controls */}
@@ -147,6 +229,14 @@ const Notifications = () => {
                   {log.channel === 'sms' && (
                     <span className="channel-tag sms"><PhoneCall size={13} /> SMS</span>
                   )}
+                  <button
+                    type="button"
+                    className="log-delete-btn"
+                    onClick={() => handleDeleteLog(log._id)}
+                    title="নোটিফিকেশনটি ডিলিট করুন"
+                  >
+                    <Trash2 size={15} />
+                  </button>
                 </div>
               </div>
 

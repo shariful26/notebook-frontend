@@ -177,28 +177,28 @@ const SharedAccounts = () => {
               <div className="full-page-overlay animate-slide-up">
                 <div className="full-page-container">
                   <div className="fp-header">
-                    <div>
-                      <h3>{historyAcc.name}</h3>
-                      <p>লেনদেনের ইতিহাস ({rows.length - 1} টি লেনদেন) [Read-Only]</p>
+                    <div className="fp-header-main">
+                      <div className="fp-header-title">
+                        <h3>{historyAcc.name}</h3>
+                        <p>লেনদেনের ইতিহাস ({rows.length - 1} টি লেনদেন) [Read-Only]</p>
+                      </div>
+                      <button className="fp-close-btn" onClick={() => setShowHistory(false)} aria-label="Close modal">
+                        <X size={20} />
+                      </button>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div className="fp-header-actions">
                       <button 
-                        className="btn btn-primary" 
+                        className="btn btn-primary fp-action-btn" 
                         onClick={() => handleDownloadSinglePDF(historyAcc.name)}
-                        style={{ padding: '8px 16px', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '6px', height: '40px' }}
                       >
-                        <FileDown size={16} /> PDF ডাউনলোড
+                        <FileDown size={16} /> <span>PDF ডাউনলোড</span>
                       </button>
                       <button 
-                        className="btn btn-ghost" 
+                        className="btn btn-ghost fp-action-btn" 
                         onClick={() => openEmailModal(historyAcc.name)}
                         disabled={emailLoading}
-                        style={{ padding: '8px 16px', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '6px', height: '40px', background: 'rgba(99, 102, 241, 0.1)', color: 'var(--primary)', border: '1px solid var(--primary)' }}
                       >
-                        <Mail size={16} /> {emailLoading ? "পাঠানো হচ্ছে..." : "ইমেইলে পাঠান"}
-                      </button>
-                      <button className="fp-close-btn" onClick={() => setShowHistory(false)} style={{ width: '40px', height: '40px' }}>
-                        <X size={20} />
+                        <Mail size={16} /> <span>{emailLoading ? "পাঠানো হচ্ছে..." : "ইমেইলে পাঠান"}</span>
                       </button>
                     </div>
                   </div>
@@ -231,7 +231,8 @@ const SharedAccounts = () => {
                             <th>ধরন</th>
                             <th>পরিমাণ</th>
                             <th>রেফারেন্স / নোট</th>
-                            <th>ব্যালেন্স</th>
+                            <th style={{ textAlign: 'center' }}>রশিদ / ছবি</th>
+                            <th style={{ textAlign: 'right' }}>ব্যালেন্স</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -248,36 +249,33 @@ const SharedAccounts = () => {
                                 {(row.type === 'minus' || row.type === 'base_minus') ? '−' : '+'}{formatCurrency(row.amount)}
                               </td>
                               <td 
-                                className={`note-cell ${row.note && row.note !== '—' ? 'clickable' : ''}`}
+                                className={`note-cell ${(row.note && row.note !== '—') || row.proofImage ? 'clickable' : ''}`}
                                 onClick={() => {
-                                  if (row.note && row.note !== '—') {
-                                    setSelectedNote(row.note);
+                                  if ((row.note && row.note !== '—') || row.proofImage) {
+                                    setSelectedNote({ note: row.note, proofImage: row.proofImage });
                                   }
                                 }}
-                                title={row.note && row.note !== '—' ? "সম্পূর্ণ দেখতে ক্লিক করুন" : undefined}
+                                title={(row.note && row.note !== '—') || row.proofImage ? "বিস্তারিত দেখতে ক্লিক করুন" : undefined}
                               >
-                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-                                  <span>{row.note}</span>
-                                  {row.proofImage && (
-                                    <button
-                                      type="button"
-                                      className="icon-btn image-proof-btn"
-                                      title="প্রমাণ ছবি দেখুন"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setSelectedProofImage(row.proofImage);
-                                      }}
-                                      style={{ 
-                                        marginLeft: '8px', padding: '4px 8px', 
-                                        background: 'rgba(59, 130, 246, 0.15)', color: '#3b82f6', 
-                                        borderRadius: '4px', display: 'inline-flex', alignItems: 'center', 
-                                        border: 'none', cursor: 'pointer', fontSize: '0.75rem', gap: '4px' 
-                                      }}
-                                    >
-                                      <Image size={13} /> ছবি
-                                    </button>
-                                  )}
-                                </div>
+                                <span>{row.note}</span>
+                              </td>
+                              <td className="receipt-cell">
+                                {row.proofImage ? (
+                                  <button
+                                    type="button"
+                                    className="receipt-thumb-btn"
+                                    title="রশিদ / প্রমাণ ছবি দেখুন"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setSelectedProofImage(row.proofImage);
+                                    }}
+                                  >
+                                    <img src={row.proofImage} alt="Receipt" className="receipt-thumb-img" />
+                                    <span>রশিদ দেখুন</span>
+                                  </button>
+                                ) : (
+                                  <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>—</span>
+                                )}
                               </td>
                               <td className={`balance-cell ${row.balance > 0 ? 'negative' : row.balance < 0 ? 'positive' : ''}`}>
                                 {formatCurrency(Math.abs(row.balance))}
@@ -301,15 +299,25 @@ const SharedAccounts = () => {
           {/* Note Viewer Modal */}
           {selectedNote && (
             <div className="note-modal-overlay" onClick={() => setSelectedNote(null)}>
-              <div className="note-modal-content animate-slide-up" onClick={(e) => e.stopPropagation()}>
+              <div className="note-modal-content animate-slide-up" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '520px' }}>
                 <div className="note-modal-header">
-                  <h3>রেফারেন্স / নোটের সম্পূর্ণ বিবরণ</h3>
+                  <h3>রেফারেন্স / নোট ও রশিদের বিবরণ</h3>
                   <button className="fp-close-btn" onClick={() => setSelectedNote(null)}>
                     <X size={20} />
                   </button>
                 </div>
                 <div className="note-modal-body">
-                  {selectedNote}
+                  <div>{typeof selectedNote === 'object' ? selectedNote.note : selectedNote}</div>
+                  {typeof selectedNote === 'object' && selectedNote.proofImage && (
+                    <div style={{ marginTop: '16px', textAlign: 'center' }}>
+                      <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '8px' }}>সংযুক্ত রশিদ / প্রমাণ ছবি:</p>
+                      <img
+                        src={selectedNote.proofImage}
+                        alt="Transaction Proof"
+                        style={{ maxWidth: '100%', maxHeight: '320px', borderRadius: '8px', objectFit: 'contain', border: '1px solid var(--border-color)' }}
+                      />
+                    </div>
+                  )}
                 </div>
                 <div className="note-modal-footer">
                   <button type="button" className="btn btn-primary" style={{ width: '100%' }} onClick={() => setSelectedNote(null)}>বন্ধ করুন</button>
@@ -321,18 +329,26 @@ const SharedAccounts = () => {
           {/* Proof Image Viewer Modal */}
           {selectedProofImage && (
             <div className="note-modal-overlay" onClick={() => setSelectedProofImage(null)}>
-              <div className="note-modal-content animate-slide-up" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '600px' }}>
+              <div className="note-modal-content animate-slide-up" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '640px' }}>
                 <div className="note-modal-header">
-                  <h3>লেনদেনের প্রমাণ ছবি</h3>
+                  <h3>লেনদেনের রশিদ / প্রমাণ ছবি</h3>
                   <button className="fp-close-btn" onClick={() => setSelectedProofImage(null)}>
                     <X size={20} />
                   </button>
                 </div>
-                <div className="note-modal-body" style={{ textAlign: 'center', padding: '16px' }}>
-                  <img src={selectedProofImage} alt="Transaction Proof" style={{ maxWidth: '100%', maxHeight: '450px', borderRadius: '8px', objectFit: 'contain', border: '1px solid var(--border-color)' }} />
+                <div className="note-modal-body" style={{ textAlign: 'center', padding: '16px', maxHeight: '70vh' }}>
+                  <img src={selectedProofImage} alt="Transaction Proof" style={{ maxWidth: '100%', maxHeight: '55vh', borderRadius: '8px', objectFit: 'contain', border: '1px solid var(--border-color)' }} />
                 </div>
-                <div className="note-modal-footer">
-                  <button type="button" className="btn btn-primary" style={{ width: '100%' }} onClick={() => setSelectedProofImage(null)}>বন্ধ করুন</button>
+                <div className="note-modal-footer" style={{ gap: '12px' }}>
+                  <a
+                    href={selectedProofImage}
+                    download="transaction_receipt.jpg"
+                    className="btn btn-ghost"
+                    style={{ flex: 1, textAlign: 'center' }}
+                  >
+                    <FileDown size={16} /> ডাউনলোড করুন
+                  </a>
+                  <button type="button" className="btn btn-primary" style={{ flex: 1 }} onClick={() => setSelectedProofImage(null)}>বন্ধ করুন</button>
                 </div>
               </div>
             </div>

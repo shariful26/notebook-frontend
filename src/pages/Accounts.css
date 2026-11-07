@@ -294,7 +294,7 @@
 
 .full-page-container {
   width: 100%;
-  max-width: 800px;
+  max-width: 1180px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
@@ -494,7 +494,13 @@
 .date-cell { color: var(--text-muted); white-space: nowrap !important; font-size: 0.85rem; }
 .type-cell { min-width: 100px; white-space: nowrap !important; }
 .amount-cell { font-weight: 600; white-space: nowrap !important; font-size: 1.05rem; }
-.note-cell { color: var(--text-muted); max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.note-cell {
+  color: var(--text-main);
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.45;
+  min-width: 180px;
+}
 .note-cell.clickable {
   cursor: pointer;
   transition: var(--transition);
@@ -502,6 +508,38 @@
 .note-cell.clickable:hover {
   color: #fff;
   text-decoration: underline;
+}
+.receipt-cell {
+  white-space: nowrap !important;
+  text-align: center;
+}
+.receipt-thumb-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px 4px 4px;
+  background: rgba(59, 130, 246, 0.14);
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  color: #60a5fa;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+.receipt-thumb-btn:hover {
+  background: rgba(59, 130, 246, 0.28);
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+}
+.receipt-thumb-img {
+  width: 28px;
+  height: 28px;
+  border-radius: 5px;
+  object-fit: cover;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 .balance-cell { font-weight: 700; white-space: nowrap !important; text-align: right; font-size: 1.05rem; }
 .fp-summary-card .value { white-space: nowrap !important; }

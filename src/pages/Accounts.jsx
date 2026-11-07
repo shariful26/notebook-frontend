@@ -235,34 +235,21 @@ const Accounts = () => {
     setShareTarget('');
   };
 
-  const handleDownloadAllUsersPDF = async () => {
+  const handleDownloadAllAccountsPDF = async () => {
+    if (!personalAccounts || personalAccounts.length === 0) {
+      alert("ডাউনলোড করার মতো কোনো হিসাব পাওয়া যায়নি।");
+      return;
+    }
+
     setPdfLoading(true);
     try {
-      let accountsToPrint = personalAccounts;
-      if (isAdmin) {
-        try {
-          const res = await api.get('/accounts/admin/all');
-          if (res.data && res.data.success && res.data.data.length > 0) {
-            accountsToPrint = res.data.data;
-          }
-        } catch (adminErr) {
-          console.warn("Admin all fetch failed, falling back to personalAccounts:", adminErr);
-        }
-      }
-
-      if (!accountsToPrint || accountsToPrint.length === 0) {
-        alert("ডাউনলোড করার মতো কোনো হিসাব পাওয়া যায়নি।");
-        return;
-      }
-
-      setAdminAccounts(accountsToPrint);
-      await new Promise((resolve) => setTimeout(resolve, 400));
-      await downloadPDFFromHTML('all-accounts-print', 'all_accounts_summary.pdf');
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      const safeUserName = (user?.name || 'my').replace(/\s+/g, '_');
+      await downloadPDFFromHTML('all-accounts-print', `${safeUserName}_all_accounts_summary.pdf`);
     } catch (err) {
       console.error(err);
       alert("PDF ডাউনলোড করতে ব্যর্থ হয়েছে।");
     } finally {
-      setAdminAccounts([]);
       setPdfLoading(false);
     }
   };
@@ -400,10 +387,10 @@ const Accounts = () => {
                     <div className="dropdown-divider"></div>
                     <button 
                       className="dropdown-item" 
-                      onClick={() => { setShowTopMenu(false); handleDownloadAllUsersPDF(); }}
+                      onClick={() => { setShowTopMenu(false); handleDownloadAllAccountsPDF(); }}
                       style={{ color: '#10b981' }}
                     >
-                      <FileDown size={16} color="#10b981" /> <span>সব হিসাবের PDF (All PDF)</span>
+                      <FileDown size={16} color="#10b981" /> <span>সব হিসাবের PDF (All Accounts PDF)</span>
                     </button>
                   </div>
                 </>
@@ -637,7 +624,8 @@ const Accounts = () => {
                           <th>ধরন</th>
                           <th>পরিমাণ</th>
                           <th>রেফারেন্স / নোট</th>
-                          <th>ব্যালেন্স</th>
+                          <th style={{ textAlign: 'center' }}>রশিদ / ছবি</th>
+                          <th style={{ textAlign: 'right' }}>ব্যালেন্স</th>
                           <th style={{ textAlign: 'center' }}>অ্যাকশন</th>
                         </tr>
                       </thead>
@@ -655,36 +643,33 @@ const Accounts = () => {
                               {(row.type === 'minus' || row.type === 'base_minus') ? '−' : '+'}{formatCurrency(row.amount)}
                             </td>
                             <td 
-                              className={`note-cell ${row.note && row.note !== '—' ? 'clickable' : ''}`}
+                              className={`note-cell ${(row.note && row.note !== '—') || row.proofImage ? 'clickable' : ''}`}
                               onClick={() => {
-                                if (row.note && row.note !== '—') {
-                                  setSelectedNote(row.note);
+                                if ((row.note && row.note !== '—') || row.proofImage) {
+                                  setSelectedNote({ note: row.note, proofImage: row.proofImage });
                                 }
                               }}
-                              title={row.note && row.note !== '—' ? "সম্পূর্ণ দেখতে ক্লিক করুন" : undefined}
+                              title={(row.note && row.note !== '—') || row.proofImage ? "বিস্তারিত দেখতে ক্লিক করুন" : undefined}
                             >
-                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-                                <span>{row.note}</span>
-                                {row.proofImage && (
-                                  <button
-                                    type="button"
-                                    className="icon-btn image-proof-btn"
-                                    title="প্রমাণ ছবি দেখুন"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setSelectedProofImage(row.proofImage);
-                                    }}
-                                    style={{ 
-                                      marginLeft: '8px', padding: '4px 8px', 
-                                      background: 'rgba(59, 130, 246, 0.15)', color: '#3b82f6', 
-                                      borderRadius: '4px', display: 'inline-flex', alignItems: 'center', 
-                                      border: 'none', cursor: 'pointer', fontSize: '0.75rem', gap: '4px' 
-                                    }}
-                                  >
-                                    <Image size={13} /> ছবি
-                                  </button>
-                                )}
-                              </div>
+                              <span>{row.note}</span>
+                            </td>
+                            <td className="receipt-cell">
+                              {row.proofImage ? (
+                                <button
+                                  type="button"
+                                  className="receipt-thumb-btn"
+                                  title="রশিদ / প্রমাণ ছবি দেখুন"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedProofImage(row.proofImage);
+                                  }}
+                                >
+                                  <img src={row.proofImage} alt="Receipt" className="receipt-thumb-img" />
+                                  <span>রশিদ দেখুন</span>
+                                </button>
+                              ) : (
+                                <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>—</span>
+                              )}
                             </td>
                             <td className={`balance-cell ${row.balance > 0 ? 'negative' : row.balance < 0 ? 'positive' : ''}`}>
                               {formatCurrency(Math.abs(row.balance))}
@@ -922,15 +907,25 @@ const Accounts = () => {
         {/* Note Viewer Modal */}
         {selectedNote && (
           <div className="note-modal-overlay" onClick={() => setSelectedNote(null)}>
-            <div className="note-modal-content animate-slide-up" onClick={(e) => e.stopPropagation()}>
+            <div className="note-modal-content animate-slide-up" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '520px' }}>
               <div className="note-modal-header">
-                <h3>রেফারেন্স / নোটের সম্পূর্ণ বিবরণ</h3>
+                <h3>রেফারেন্স / নোট ও রশিদের বিবরণ</h3>
                 <button className="fp-close-btn" onClick={() => setSelectedNote(null)}>
                   <X size={20} />
                 </button>
               </div>
               <div className="note-modal-body">
-                {selectedNote}
+                <div>{typeof selectedNote === 'object' ? selectedNote.note : selectedNote}</div>
+                {typeof selectedNote === 'object' && selectedNote.proofImage && (
+                  <div style={{ marginTop: '16px', textAlign: 'center' }}>
+                    <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '8px' }}>সংযুক্ত রশিদ / প্রমাণ ছবি:</p>
+                    <img
+                      src={selectedNote.proofImage}
+                      alt="Transaction Proof"
+                      style={{ maxWidth: '100%', maxHeight: '320px', borderRadius: '8px', objectFit: 'contain', border: '1px solid var(--border-color)' }}
+                    />
+                  </div>
+                )}
               </div>
               <div className="note-modal-footer">
                 <button type="button" className="btn btn-primary" style={{ width: '100%' }} onClick={() => setSelectedNote(null)}>বন্ধ করুন</button>
@@ -942,18 +937,26 @@ const Accounts = () => {
         {/* Proof Image Viewer Modal */}
         {selectedProofImage && (
           <div className="note-modal-overlay" onClick={() => setSelectedProofImage(null)}>
-            <div className="note-modal-content animate-slide-up" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '600px' }}>
+            <div className="note-modal-content animate-slide-up" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '640px' }}>
               <div className="note-modal-header">
-                <h3>লেনদেনের প্রমাণ ছবি</h3>
+                <h3>লেনদেনের রশিদ / প্রমাণ ছবি</h3>
                 <button className="fp-close-btn" onClick={() => setSelectedProofImage(null)}>
                   <X size={20} />
                 </button>
               </div>
-              <div className="note-modal-body" style={{ textAlign: 'center', padding: '16px' }}>
-                <img src={selectedProofImage} alt="Transaction Proof" style={{ maxWidth: '100%', maxHeight: '450px', borderRadius: '8px', objectFit: 'contain', border: '1px solid var(--border-color)' }} />
+              <div className="note-modal-body" style={{ textAlign: 'center', padding: '16px', maxHeight: '70vh' }}>
+                <img src={selectedProofImage} alt="Transaction Proof" style={{ maxWidth: '100%', maxHeight: '55vh', borderRadius: '8px', objectFit: 'contain', border: '1px solid var(--border-color)' }} />
               </div>
-              <div className="note-modal-footer">
-                <button type="button" className="btn btn-primary" style={{ width: '100%' }} onClick={() => setSelectedProofImage(null)}>বন্ধ করুন</button>
+              <div className="note-modal-footer" style={{ gap: '12px' }}>
+                <a
+                  href={selectedProofImage}
+                  download="transaction_receipt.jpg"
+                  className="btn btn-ghost"
+                  style={{ flex: 1, textAlign: 'center' }}
+                >
+                  <FileDown size={16} /> ডাউনলোড করুন
+                </a>
+                <button type="button" className="btn btn-primary" style={{ flex: 1 }} onClick={() => setSelectedProofImage(null)}>বন্ধ করুন</button>
               </div>
             </div>
           </div>
@@ -1069,26 +1072,37 @@ const Accounts = () => {
           <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '2px solid #4f46e5', paddingBottom: '16px', marginBottom: '24px' }}>
             <div>
               <h1 style={{ margin: 0, fontSize: '24px', color: '#4f46e5' }}>স্মার্ট নোটবুক</h1>
-              <p style={{ margin: '4px 0 0', fontSize: '14px', color: '#64748b' }}>সকল ব্যবহারকারীর হিসাবের তালিকা (Admin Report)</p>
+              <p style={{ margin: '4px 0 0', fontSize: '14px', color: '#64748b' }}>সকল হিসাবের সারসংক্ষেপ বিবরণী (All Accounts Summary)</p>
+              {user && (
+                <p style={{ margin: '4px 0 0', fontSize: '13px', color: '#334155', fontWeight: 'bold' }}>
+                  ব্যবহারকারী: {user.name} ({user.email})
+                </p>
+              )}
             </div>
             <div style={{ textAlign: 'right' }}>
               <p style={{ margin: 0, fontSize: '14px', fontWeight: 'bold' }}>তারিখ: {new Date().toLocaleDateString('bn-BD')}</p>
             </div>
           </div>
 
-          {adminAccounts && adminAccounts.length > 0 && (
+          {personalAccounts && personalAccounts.length > 0 && (
             <>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '32px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '32px' }}>
                 <div style={{ border: '1px solid #e2e8f0', borderRadius: '8px', padding: '16px', textAlign: 'center', background: '#f8fafc' }}>
                   <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>মোট হিসাবের সংখ্যা</div>
                   <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#4f46e5' }}>
-                    {adminAccounts.length} টি
+                    {personalAccounts.length} টি
                   </div>
                 </div>
                 <div style={{ border: '1px solid #e2e8f0', borderRadius: '8px', padding: '16px', textAlign: 'center', background: '#f8fafc' }}>
-                  <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>সর্বমোট ব্যালেন্স</div>
+                  <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>সর্বমোট বকেয়া/ঋণ (Due)</div>
+                  <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#dc2626' }}>
+                    {formatCurrency(totalDue)}
+                  </div>
+                </div>
+                <div style={{ border: '1px solid #e2e8f0', borderRadius: '8px', padding: '16px', textAlign: 'center', background: '#f8fafc' }}>
+                  <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>সর্বমোট পাওনা/প্লাস (Receivable)</div>
                   <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#16a34a' }}>
-                    {formatCurrency(adminAccounts.reduce((sum, acc) => sum + (acc.currentBalance || 0), 0))}
+                    {formatCurrency(totalReceivable)}
                   </div>
                 </div>
               </div>
@@ -1097,28 +1111,38 @@ const Accounts = () => {
                 <thead>
                   <tr style={{ background: '#4f46e5', color: '#ffffff' }}>
                     <th style={{ border: '1px solid #e2e8f0', padding: '10px', textAlign: 'left' }}>ক্র.নং.</th>
-                    <th style={{ border: '1px solid #e2e8f0', padding: '10px', textAlign: 'left' }}>ব্যবহারকারী (মালিক)</th>
                     <th style={{ border: '1px solid #e2e8f0', padding: '10px', textAlign: 'left' }}>হিসাবের নাম</th>
-                    <th style={{ border: '1px solid #e2e8f0', padding: '10px', textAlign: 'right' }}>প্রারম্ভিক ব্যালেন্স</th>
+                    <th style={{ border: '1px solid #e2e8f0', padding: '10px', textAlign: 'left' }}>মোবাইল / ইমেইল</th>
+                    <th style={{ border: '1px solid #e2e8f0', padding: '10px', textAlign: 'right' }}>মোট বকেয়া (+)</th>
+                    <th style={{ border: '1px solid #e2e8f0', padding: '10px', textAlign: 'right' }}>মোট পরিশোধ (-)</th>
                     <th style={{ border: '1px solid #e2e8f0', padding: '10px', textAlign: 'right' }}>বর্তমান ব্যালেন্স</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {adminAccounts.map((acc, idx) => (
-                    <tr key={idx} style={{ background: idx % 2 === 0 ? '#ffffff' : '#f8fafc' }}>
-                      <td style={{ border: '1px solid #e2e8f0', padding: '10px' }}>{idx + 1}</td>
-                      <td style={{ border: '1px solid #e2e8f0', padding: '10px' }}>
-                        {acc.userId ? `${acc.userId.name} (${acc.userId.email})` : 'N/A'}
-                      </td>
-                      <td style={{ border: '1px solid #e2e8f0', padding: '10px', fontWeight: 'bold' }}>{acc.name}</td>
-                      <td style={{ border: '1px solid #e2e8f0', padding: '10px', textAlign: 'right' }}>
-                        {formatCurrency(acc.baseAmount || 0)}
-                      </td>
-                      <td style={{ border: '1px solid #e2e8f0', padding: '10px', textAlign: 'right', fontWeight: 'bold', color: (acc.currentBalance || 0) >= 0 ? '#16a34a' : '#dc2626' }}>
-                        {formatCurrency(acc.currentBalance || 0)}
-                      </td>
-                    </tr>
-                  ))}
+                  {personalAccounts.map((acc, idx) => {
+                    const baseAmt = Number(acc.baseAmount) || 0;
+                    const totalIn = (acc.transactions || []).filter(t => t.type === 'plus').reduce((s, t) => s + (Number(t.amount) || 0), 0) + (baseAmt > 0 ? baseAmt : 0);
+                    const totalOut = (acc.transactions || []).filter(t => t.type === 'minus').reduce((s, t) => s + (Number(t.amount) || 0), 0) + (baseAmt < 0 ? Math.abs(baseAmt) : 0);
+                    const bal = acc.currentBalance || 0;
+                    return (
+                      <tr key={acc._id || idx} style={{ background: idx % 2 === 0 ? '#ffffff' : '#f8fafc' }}>
+                        <td style={{ border: '1px solid #e2e8f0', padding: '10px' }}>{idx + 1}</td>
+                        <td style={{ border: '1px solid #e2e8f0', padding: '10px', fontWeight: 'bold' }}>{acc.name}</td>
+                        <td style={{ border: '1px solid #e2e8f0', padding: '10px', color: '#475569' }}>
+                          {[acc.phone, acc.email].filter(Boolean).join(' | ') || '—'}
+                        </td>
+                        <td style={{ border: '1px solid #e2e8f0', padding: '10px', textAlign: 'right', color: '#dc2626', fontWeight: 'bold' }}>
+                          {formatCurrency(totalIn)}
+                        </td>
+                        <td style={{ border: '1px solid #e2e8f0', padding: '10px', textAlign: 'right', color: '#16a34a', fontWeight: 'bold' }}>
+                          {formatCurrency(totalOut)}
+                        </td>
+                        <td style={{ border: '1px solid #e2e8f0', padding: '10px', textAlign: 'right', fontWeight: 'bold', color: bal > 0 ? '#dc2626' : bal < 0 ? '#16a34a' : '#64748b' }}>
+                          {formatCurrency(Math.abs(bal))} {bal > 0 ? '(দেনা)' : bal < 0 ? '(পাওনা)' : ''}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </>
